@@ -1,4 +1,6 @@
 ﻿#----------------------------------------------------------------------------------
+# SQL Security Cmdlets
+#----------------------------------------------------------------------------------
 
 Function Get-SQLDBLoginRoles {
 
@@ -208,6 +210,8 @@ Function Set-SQLDBLoginRoles {
 }
 
 #----------------------------------------------------------------------------------
+# Database Cmdlets
+#----------------------------------------------------------------------------------
 
 Function Remove-SQLDatabase {
 
@@ -251,3 +255,324 @@ Function Remove-SQLDatabase {
     }
 
 }
+
+#----------------------------------------------------------------------------------
+# SQL Job Cmdlets
+#----------------------------------------------------------------------------------
+
+Function Get-SQLJob {
+
+<#
+    .Synopsis
+        Gets a list of jobs on a sql server.
+
+    .Description
+        Returns SQL jobs.
+
+    .Parameter SQLInstance
+        SQL server\Instance to retrieve jobs.
+
+    .Parameter Name
+        Name of the job to return.  Default is to return all. Wildcards are accepted.
+
+    .Parameter Credential
+        Either windows username/password or sql username/password when used with the SQLAuthentication switch
+
+    .Parameter SQLAuthentication
+        When used indicates the Credential parameter is a SQL username/password
+
+    .Example
+        Return all jobs from ServerA.
+
+        Get-SQLJob -SQLInstance 'ServerA'
+
+    .Example
+        Return the job named 'Backup' using windows authentication
+
+        Get-SQLJob -SQLInstance 'ServerA' -Credential (get-Credential) -Name 'Backup'
+
+    .Example
+        List the SQL Jobs using SQL Authentication on the local server.
+
+        Get-SQLJob -Credential (Get-Credential) -SQLAuthentication
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 JUN 27   
+#>
+
+    [cmdletBinding(DefaultParameterSetName = 'Default')]
+    param (
+        
+        [Alias('ComputerName')]
+        [String]$SQLInstance = $env:COMPUTERNAME,
+                
+        [String]$Name,
+                
+        [Parameter(ParameterSetName = 'WinAuth',Mandatory = $True)]
+        [Parameter(ParameterSetName = 'SQLAuth',Mandatory = $True)]
+        [PSCredential]$Credential,
+        
+        [Parameter(ParameterSetName = 'SQLAuth',Mandatory = $True)]
+        [Switch]$SQLAuthentication
+
+  #      [Parameter(ParameterSetName = 'WinAuth',Mandatory = $True)]
+  #     [PSCredential]$RunAs
+    )
+    
+    Process {
+        Write-Verbose "Getting SQL jobs from $SQLInstance"
+       
+        Switch ( $PSCmdlet.ParameterSetName ) {
+            'SQLAuth' {
+                Write-Verbose "Using SQL Authentication"
+                $SQLJobs = Invoke-SQLCmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job INNER Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id INNER JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id" -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+            }
+
+            'WinAuth' {
+                Write-Verbose "Windows Authentication supplying credentials"
+                $SQLJobs =invoke-Command -ComputerName $SQLInstance -Credential $Credential -ScriptBlock {
+                    Write-Output (Invoke-SQLCmd -ServerInstance $Using:SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job INNER Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id INNER JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id")
+                }
+            }
+
+            Default {
+                $SQLJobs = Invoke-SQLCmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job INNER Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id INNER JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id"
+            }
+        }
+
+        
+        if ( $Name ) { $SQLJobs = $SQLJobs | where Name -like $Name }
+        
+        Write-Output $SQLJobs
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Set-SQLJob {
+
+<#
+    .Synopsis
+        Edit a SQL Job
+
+    .Description
+        Allows edit / changes to a SQL Job
+
+    .Parameter SQLInstance
+        SQL server\Instance to retrieve jobs.
+
+    .Parameter SQLJob
+        Object that represents a sql job.  Use Get-SQLJob.
+
+    .Parameter ScheduleName
+        Name of the schedule to assign to the job.  Schedule must already exist.  Use New-SQLSchedule to create.
+
+    .Example
+        Assign schedule to job
+
+        $SQLJob = Get-SQLJob -SQLInstance 'ServerA' -Name 'FullBackup'
+        Set-SQLJob -SQLInstance 'ServerA' -SQLJob $SQLJob -ScheduleName '2am'
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 JUN 27
+
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Alias('ComputerName')]
+        [String]$SQLInstance = $env:COMPUTERNAME,
+
+        [Parameter (Mandatory = $True)]
+        [System.Data.DataRow]$SQLJob,
+
+        [String]$ScheduleName
+    )
+
+    if ( $ScheduleName ) {
+        Write-verbose "Setting SQL Job ( $($J.Name) ) Schedule to $ScheduleName"
+
+        if ( Get-SQLSchedule -SQLInstance $SQLInstance -Name $ScheduleName ) {
+                Invoke-Sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "sp_attach_Schedule @Job_id = '$($SQLJob.Job_ID)', @Schedule_Name = N'$ScheduleName'"
+            }
+            else {
+                Write-Error "Schedule, $ScheduleName does not exist"
+        }
+    }
+}
+
+#----------------------------------------------------------------------------------
+# SQL Job Schedule Cmdlets
+#----------------------------------------------------------------------------------
+
+Function New-SQLSchedule {
+
+<#
+    .Synopsis
+        Creates new SQL Job Schedule
+
+    .Description
+        
+
+    .Parameter SQLInstance
+        SQL Serverver and instance
+
+    .Parameter Name
+        Name of the new Schedule
+
+    .Parameter Frequency
+        How often the schedule should run
+
+    .Parameter StartTime
+        Time the job will begin running.
+
+    .Link
+        https://msdn.microsoft.com/en-us/library/cc645912.aspx
+
+    .Link
+        Schedule parameter explaination
+
+        https://msdn.microsoft.com/en-us/library/ms187320.aspx
+#>
+
+[CmdletBinding()]
+    Param (
+        [Alias('ComputerName')]
+        [String]$SQLInstance = $env:COMPUTERNAME,
+
+        [Parameter(Mandatory = $True)]
+        [String]$Name,
+
+        [ValidateSet('Once','Daily','Weekly','Monthly','Monthly relative to Freq_interval','Run when SQL Agent Starts','Run when computer is idle')]
+        [String]$Frequency = 'Once',
+
+        [Parameter ( HelpMessage = "The time on any day to begin execution of a job. The time is a 24-hour clock, and must be entered using the form HHMMSS.")]
+        [Validatescript ( { $_ -match '\d{6}' } )]
+        [String]$StartTime = 000000
+    )
+
+    Begin {
+        $FreqArray = 'Once','blank','Daily','Weekly','Monthly','Monthly relative to Freq_interval','Run when SQL Agent Starts','Run when computer is idle'
+
+        $SP_Add_Schedule = "USE msdb ;
+
+            EXEC dbo.sp_add_schedule
+                @schedule_name = N'$Name',
+                @enabled = 1,
+                @freq_type = $([Math]::pow(2,$FreqArray.IndexOf( $Frequency ))),
+                @freq_interval = 1,
+                @freq_subday_type = 1,
+                @freq_subday_interval = 0,
+                @freq_relative_interval = 0,
+                @freq_recurrence_factor = 0,
+                @active_start_date = 20150120,
+                @active_end_date = 99991231,
+                @active_start_time = $StartTime,
+                @active_end_time = 235959"
+    }
+
+    Process {
+        
+        Foreach ( $S in $SQLInstance ) {
+            Write-Verbose "Adding schedule $Name to SQL on $S"
+
+            # ----- Check if the schedule already exist to prevent duplicates
+            if ( Get-SQLSchedule -SQLInstance $S -Name $Name ) { Write-Error "A schedule named $Name already exists on $S"; Continue }
+        
+            Invoke-Sqlcmd -ServerInstance $S -Database msdb -Query $SP_Add_Schedule
+        } 
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Get-SQLSchedule {
+
+<#
+    .Synopsis
+        Returns a list of SQL Job Schedules
+
+    .Description
+        Returns the Job schedules listed in the dbo.sysschedules database.
+
+    .Parameter ComputerName
+        Name of the SQL Server
+
+    .Example
+        Get the list of schedules from the local SQL server
+
+        Get-SQLSchedule
+
+        schedule_id            : 8
+        schedule_uid           : d0c45013-f0fb-4140-8eb7-ac963e30ec5c
+        originating_server_id  : 0
+        name                   : syspolicy_purge_history_schedule
+        owner_sid              : {1}
+        enabled                : 1
+        freq_type              : 4
+        freq_interval          : 1
+        freq_subday_type       : 1
+        freq_subday_interval   : 0
+        freq_relative_interval : 0
+        freq_recurrence_factor : 0
+        active_start_date      : 20080101
+        active_end_date        : 99991231
+        active_start_time      : 20000
+        active_end_time        : 235959
+        date_created           : 4/19/2016 12:06:51 PM
+        date_modified          : 4/19/2016 12:06:51 PM
+        version_number         : 1
+
+        schedule_id            : 9
+        schedule_uid           : f2a87e8f-91fe-4402-aa2a-c613fb4b2eeb
+        originating_server_id  : 0
+        name                   : Schedule
+        owner_sid              : {1, 5, 0, 0...}
+        enabled                : 1
+        freq_type              : 4
+        freq_interval          : 1
+        freq_subday_type       : 1
+        freq_subday_interval   : 0
+        freq_relative_interval : 0
+        freq_recurrence_factor : 0
+        active_start_date      : 20160520
+        active_end_date        : 99991231
+        active_start_time      : 3000
+        active_end_time        : 235959
+        date_created           : 5/20/2016 2:12:08 PM
+        date_modified          : 5/20/2016 2:12:08 PM
+        version_number         : 1
+
+    .Link
+        dbo.Sysschedules database
+
+        https://msdn.microsoft.com/en-us/library/ms178644.aspx
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 JUN 24
+#>
+    
+    [CmdletBinding()]
+    Param (
+        [Alias('ComputerName')]
+        [String]$SQLInstance = $env:COMPUTERNAME,
+
+        [String]$Name
+    )
+
+    $Schedules = invoke-sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT * FROM dbo.sysschedules"
+    
+    if ( $Name ) {
+         $Schedules = $Schedules | where Name -eq $Name
+     }
+    
+    Write-Output $Schedules
+}
+
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------

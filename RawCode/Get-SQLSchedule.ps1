@@ -76,12 +76,10 @@
     $Schedules = invoke-sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT * FROM dbo.sysschedules"
     
     if ( $Name ) {
- 
-        $Schedules = $Schedules | where Name -eq $Name
+         $Schedules = $Schedules | where Name -eq $Name
      }
     
     Write-Output $Schedules
-
 }
 
 import-module 'C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\SQLPS\sqlps' -disablenamechecking

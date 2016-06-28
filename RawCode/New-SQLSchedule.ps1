@@ -70,16 +70,11 @@
             Write-Verbose "Adding schedule $Name to SQL on $S"
 
             # ----- Check if the schedule already exist to prevent duplicates
-        
             if ( Get-SQLSchedule -SQLInstance $S -Name $Name ) { Write-Error "A schedule named $Name already exists on $S"; Continue }
         
-
-            #Invoke-Sqlcmd -ServerInstance $S -Database msdb -Query $SP_Add_Schedule
-        }
-      
+            Invoke-Sqlcmd -ServerInstance $S -Database msdb -Query $SP_Add_Schedule
+        } 
     }
-
-   
 }
 
 import-module 'C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\SQLPS\sqlps' -disablenamechecking
