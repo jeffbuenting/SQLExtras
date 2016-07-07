@@ -314,10 +314,9 @@ Function Get-SQLJob {
         [PSCredential]$Credential,
         
         [Parameter(ParameterSetName = 'SQLAuth',Mandatory = $True)]
-        [Switch]$SQLAuthentication
+        [Switch]$SQLAuthentication,
 
-  #      [Parameter(ParameterSetName = 'WinAuth',Mandatory = $True)]
-  #     [PSCredential]$RunAs
+        [switch]$Force
     )
     
     Process {
@@ -332,7 +331,23 @@ Function Get-SQLJob {
             'WinAuth' {
                 Write-Verbose "Windows Authentication supplying credentials"
                 $SQLJobs =invoke-Command -ComputerName $SQLInstance -Credential $Credential -ScriptBlock {
+                    
+                    # ----- Check execution Policy and override if -Force is include.
+                    $Policy = Get-ExecutionPolicy 
+                    if ( $Policy -ne 'Unrestricted' ) {
+                        if ( $Using:Force ) {
+                                Write-Verbose "Overridding execution policy"
+                                Set-ExecutionPolicy Unrestricted
+                            }
+                            Else {
+                                Write-Error "Running scrips on remote computer ( $Using:S ) is disabled.  See about_Execution_Policies for mor information.  Or use the -Force switch to override"
+                        }
+                    }
+                                
+                                          
+                   # import-module 'C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\SQLPS\SQLPS.PSD1'
                     Write-Output (Invoke-SQLCmd -ServerInstance $Using:SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job INNER Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id INNER JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id")
+                        
                 }
             }
 
@@ -343,6 +358,8 @@ Function Get-SQLJob {
 
         
         if ( $Name ) { $SQLJobs = $SQLJobs | where Name -like $Name }
+
+        #write-verbose "$($SQLJobs | out-string)"
         
         Write-Output $SQLJobs
     }
@@ -368,11 +385,24 @@ Function Set-SQLJob {
     .Parameter ScheduleName
         Name of the schedule to assign to the job.  Schedule must already exist.  Use New-SQLSchedule to create.
 
+    .Parameter AttachSchedule
+        specifies the ScheduleName should be attached to the SQLJob
+
+    .Parameter DetachSchedule
+        Specifies the scheduleName should be removed from the SQLJob
+
+    .parameter Credential
+        Either a domain or SQL account user name / password with permissions to log onto the SQL server.
+
     .Example
         Assign schedule to job
 
         $SQLJob = Get-SQLJob -SQLInstance 'ServerA' -Name 'FullBackup'
         Set-SQLJob -SQLInstance 'ServerA' -SQLJob $SQLJob -ScheduleName '2am'
+
+    .Link
+        https://msdn.microsoft.com/en-us/library/ms187734.aspx
+
 
     .Note
         Author : Jeff Buenting
@@ -385,20 +415,72 @@ Function Set-SQLJob {
         [Alias('ComputerName')]
         [String]$SQLInstance = $env:COMPUTERNAME,
 
-        [Parameter (Mandatory = $True)]
-        [System.Data.DataRow]$SQLJob,
+        [Parameter (Mandatory = $True,ValueFromPipeline = $True)]
+      #  [System.Data.DataRow]$SQLJob,
+        [PSCustomObject]$SQLJob,
 
-        [String]$ScheduleName
+        [Parameter (ParameterSetName = 'AttachSchedule',Mandatory = $True)]
+        [Parameter (ParameterSetName = 'DetachSchedule',Mandatory = $True)]
+        [String]$ScheduleName,
+
+        [Parameter (ParameterSetName = 'AttachSchedule',Mandatory = $True)]
+        [Switch]$AttachSchedule,
+
+        [Parameter (ParameterSetName = 'DetachSchedule',Mandatory = $True)]
+        [Switch]$DetachSchedule,
+
+        [PSCredential]$Credential
     )
 
-    if ( $ScheduleName ) {
-        Write-verbose "Setting SQL Job ( $($J.Name) ) Schedule to $ScheduleName"
-
-        if ( Get-SQLSchedule -SQLInstance $SQLInstance -Name $ScheduleName ) {
-                Invoke-Sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "sp_attach_Schedule @Job_id = '$($SQLJob.Job_ID)', @Schedule_Name = N'$ScheduleName'"
+    switch ( $PSCmdlet.ParameterSetName ) {
+        'AttachSchedule' {
+            Write-verbose "Setting SQL Job ( $($SQLJob.Name) ) Schedule to $ScheduleName"
+        
+            If ( $Credential ) {
+                    if ( $Credential.UserName -match '\\' ) {
+                            # ----- Username has domain name so using windows auth
+                            invoke-command -ComputerName $SQLInstance -Credential $Credential -ScriptBlock {
+                                if ( invoke-sqlcmd -ServerInstance $Using:SQLInstance -Database msdb -Query "SELECT * FROM dbo.sysschedules" | where Name -eq $Using:ScheduleName ) {
+                                        Invoke-Sqlcmd -ServerInstance $Using:SQLInstance -Database msdb -Query "sp_attach_Schedule @Job_id = '$($Using:SQLJob.Job_ID)', @Schedule_Name = N'$Using:ScheduleName'" 
+                                    }
+                                    else {
+                                        Write-Error "Schedule, $Using:ScheduleName does not exist"
+                                }
+                            }
+                        }
+                        else {
+                            # ----- Username does not have domain name so SQL Auth
+                            Invoke-Sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "sp_attach_Schedule @Job_id = '$($SQLJob.Job_ID)', @Schedule_Name = N'$ScheduleName'" -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+                    }
+                }
+                else {
+                    Invoke-Sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "sp_attach_Schedule @Job_id = '$($SQLJob.Job_ID)', @Schedule_Name = N'$ScheduleName'" 
             }
-            else {
-                Write-Error "Schedule, $ScheduleName does not exist"
+        }
+
+        'DetachSchedule' {
+            Write-verbose "Removing $ScheduleName Schedule from SQL Job ( $($SQLJob.Name) )"
+
+            If ( $Credential ) {
+                    if ( $Credential.UserName -match '\\' ) {
+                            # ----- Username has domain name so using windows auth
+                            invoke-command -ComputerName $SQLInstance -Credential $Credential -ScriptBlock {
+                                if ( invoke-sqlcmd -ServerInstance $Using:SQLInstance -Database msdb -Query "SELECT * FROM dbo.sysschedules" | where Name -eq $Using:ScheduleName ) {
+                                        Invoke-Sqlcmd -ServerInstance $Using:SQLInstance -Database msdb -Query "sp_detach_Schedule @Job_id = '$($Using:SQLJob.Job_ID)', @Schedule_Name = N'$Using:ScheduleName', @delete_unused_schedule = 1" 
+                                    }
+                                    else {
+                                        Write-Error "Schedule, $Using:ScheduleName does not exist"
+                                }
+                            }
+                        }
+                        else {
+                            # ----- Username does not have domain name so SQL Auth
+                            Invoke-Sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "sp_detach_Schedule @Job_id = '$($SQLJob.Job_ID)', @Schedule_Name = N'$ScheduleName', @delete_unused_schedule = 1" -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+                    }
+                }
+                else {
+                    Invoke-Sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "sp_detach_Schedule @Job_id = '$($SQLJob.Job_ID)', @Schedule_Name = N'$ScheduleName', @delete_unused_schedule = 1" 
+            }
         }
     }
 }
@@ -428,6 +510,41 @@ Function New-SQLSchedule {
     .Parameter StartTime
         Time the job will begin running.
 
+    .Parameter FreqInterval
+        Used in conjuction with Frequency
+
+        Frequency          Effect on FreqInterval
+        
+        Once               Unused
+
+        Daily              Every FreqInterval Days
+
+        Weekly             freq_interval is one or more of the following (combined with an OR logical operator):
+                           1 = Sunday
+                           2 = Monday
+                           4 = Tuesday
+                           8 = Wednesday
+                           16 = Thursday
+                           32 = Friday
+                           64 = Saturday
+
+        Monthly            on the FreqInterval day of the month
+
+        Monthly Relative   FreqInterval is one of the following
+                           1 = Sunday
+                           2 = Monday
+                           3 = Tuesday
+                           4 = Wednesday
+                           5 = Thursday
+                           6 = Friday
+                           7 = Saturday
+                           8 = Day
+                           9 = Weekday
+                           10 = Weekend Day
+
+        When SQL Agent Starts Unused
+
+
     .Link
         https://msdn.microsoft.com/en-us/library/cc645912.aspx
 
@@ -448,29 +565,57 @@ Function New-SQLSchedule {
         [ValidateSet('Once','Daily','Weekly','Monthly','Monthly relative to Freq_interval','Run when SQL Agent Starts','Run when computer is idle')]
         [String]$Frequency = 'Once',
 
+        [Int]$FreqInterval = 1,
+
+        [int]$FreqRecurranceFactor,
+
         [Parameter ( HelpMessage = "The time on any day to begin execution of a job. The time is a 24-hour clock, and must be entered using the form HHMMSS.")]
         [Validatescript ( { $_ -match '\d{6}' } )]
-        [String]$StartTime = 000000
+        [String]$StartTime = 000000,
+
+        [Parameter(ParameterSetName = 'WinAuth',Mandatory = $True)]
+        [Parameter(ParameterSetName = 'SQLAuth',Mandatory = $True)]
+        [PSCredential]$Credential,
+        
+        [Parameter(ParameterSetName = 'SQLAuth',Mandatory = $True)]
+        [Switch]$SQLAuthentication,
+
+        [Switch]$Force
+
     )
 
     Begin {
         $FreqArray = 'Once','blank','Daily','Weekly','Monthly','Monthly relative to Freq_interval','Run when SQL Agent Starts','Run when computer is idle'
 
+        # ----- This sets the defaults for FreqRecuranceFactor.  Doing it this way Because it is different depending on what FreqInterval is.  And I could not figure out how to get it to work in the parameter section
+        if ( -Not $FreqRecurranceFactor ) {
+            Write-Verbose "Freq = $Frequency"
+             if ( ($Frequency -eq 8) -or ($Frequency -eq 16) -or ($Frequency -eq 32) ) { 
+                    $FreqRecurranceFactor = 1
+                }
+                Else {
+                    $FreqRecurranceFactor = 0
+            }
+        }
+
+        # ----- Creates the SQL Query to build the SQL Job Schedule
         $SP_Add_Schedule = "USE msdb ;
 
             EXEC dbo.sp_add_schedule
                 @schedule_name = N'$Name',
                 @enabled = 1,
                 @freq_type = $([Math]::pow(2,$FreqArray.IndexOf( $Frequency ))),
-                @freq_interval = 1,
+                @freq_interval = $FreqInterval,
                 @freq_subday_type = 1,
                 @freq_subday_interval = 0,
                 @freq_relative_interval = 0,
-                @freq_recurrence_factor = 0,
+                @freq_recurrence_factor = $FreqRecurranceFactor,
                 @active_start_date = 20150120,
                 @active_end_date = 99991231,
                 @active_start_time = $StartTime,
                 @active_end_time = 235959"
+
+        write-Verbose $SP_Add_Schedule
     }
 
     Process {
@@ -478,10 +623,48 @@ Function New-SQLSchedule {
         Foreach ( $S in $SQLInstance ) {
             Write-Verbose "Adding schedule $Name to SQL on $S"
 
-            # ----- Check if the schedule already exist to prevent duplicates
-            if ( Get-SQLSchedule -SQLInstance $S -Name $Name ) { Write-Error "A schedule named $Name already exists on $S"; Continue }
+            Switch ( $PSCmdlet.ParameterSetName ) {
+                'SQLAuth' {
+                    Write-Verbose "Using SQL Authentication"
+
+                    # ----- Check if the schedule already exist to prevent duplicates
+                    if ( Get-SQLSchedule -SQLInstance $S -Name $Name ) { Write-Error "A schedule named $Name already exists on $S"; Continue }
+
+                    Invoke-Sqlcmd -ServerInstance $S -Database msdb -Query $SP_Add_Schedule -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+                }
+
+                'WinAuth' {
+                    Write-Verbose "Windows Authentication supplying credentials"
+                    invoke-Command -ComputerName $S -Credential $Credential -ScriptBlock {
+                    
+                        # ----- Check execution Policy and override if -Force is include.
+                        $Policy = Get-ExecutionPolicy 
+                        if ( $Policy -ne 'Unrestricted' ) {
+                            if ( $Using:Force ) {
+                                    Write-Verbose "Overridding execution policy"
+                                    Set-ExecutionPolicy Unrestricted
+                                }
+                                Else {
+                                    Write-Error "Running scrips on remote computer ( $Using:S ) is disabled.  See about_Execution_Policies for mor information.  Or use the -Force switch to override"
+                            }
+                        }
+                        
+                        # ----- Check if the schedule already exist to prevent duplicates
+                        if (  invoke-sqlcmd -ServerInstance $Using:S -Database msdb -Query "SELECT * FROM dbo.sysschedules" | where Name -eq $Name ) { Write-Error "A schedule named $Using:Name already exists on $Using:S"; Continue }
+                             
+                        Invoke-Sqlcmd -ServerInstance $Using:S -Database msdb -Query $Using:SP_Add_Schedule 
+                    }
+                }
+
+                Default {
+                    # ----- Check if the schedule already exist to prevent duplicates
+                    if ( Get-SQLSchedule -SQLInstance $S -Name $Name ) { Write-Error "A schedule named $Name already exists on $S"; Continue }
         
-            Invoke-Sqlcmd -ServerInstance $S -Database msdb -Query $SP_Add_Schedule
+                    Invoke-Sqlcmd -ServerInstance $S -Database msdb -Query $SP_Add_Schedule
+                }
+            }
+
+            
         } 
     }
 }
@@ -560,14 +743,50 @@ Function Get-SQLSchedule {
         [Alias('ComputerName')]
         [String]$SQLInstance = $env:COMPUTERNAME,
 
-        [String]$Name
+        [String]$Name,
+
+        [PSCredential]$Credential,
+
+        [Switch]$Force
     )
 
-    $Schedules = invoke-sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT * FROM dbo.sysschedules"
+    Write-Verbose "Getting SQL job schedules on $SqlInstance"
+
+    If ( $Credential ) {
+            if ( $Credential.UserName -match '\\' ) {
+                    # ----- Username has domain name so using windows auth
+                    $Schedules = invoke-command -ComputerName $SQLInstance -Credential $Credential -ScriptBlock { 
+                        
+                        # ----- Check execution Policy and override if -Force is include.
+                        $Policy = Get-ExecutionPolicy 
+                        if ( $Policy -ne 'Unrestricted' ) {
+                            if ( $Using:Force ) {
+                                    Write-Verbose "Overridding execution policy"
+                                    Set-ExecutionPolicy Unrestricted
+                                }
+                                Else {
+                                    Write-Error "Running scrips on remote computer ( $Using:S ) is disabled.  See about_Execution_Policies for mor information.  Or use the -Force switch to override"
+                            }
+                        }
+
+                        write-output ( invoke-sqlcmd -Database msdb -Query "SELECT * FROM dbo.sysschedules" )
+                    }
+                }
+                else {
+                    # ----- Username does not have domain name so SQL Auth
+                    $Schedules = invoke-sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT * FROM dbo.sysschedules" -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+            }
+        }
+        else {
+            # ----- No credentials using logged on credentials
+            $Schedules = invoke-sqlcmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT * FROM dbo.sysschedules"
+    }
     
     if ( $Name ) {
          $Schedules = $Schedules | where Name -eq $Name
      }
+
+    
     
     Write-Output $Schedules
 }
