@@ -325,7 +325,7 @@ Function Get-SQLJob {
         Switch ( $PSCmdlet.ParameterSetName ) {
             'SQLAuth' {
                 Write-Verbose "Using SQL Authentication"
-                $SQLJobs = Invoke-SQLCmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job INNER Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id INNER JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id" -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+                $SQLJobs = Invoke-SQLCmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job LEFT Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id LEFT JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id" -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
             }
 
             'WinAuth' {
@@ -346,13 +346,13 @@ Function Get-SQLJob {
                                 
                                           
                    # import-module 'C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\SQLPS\SQLPS.PSD1'
-                    Write-Output (Invoke-SQLCmd -ServerInstance $Using:SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job INNER Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id INNER JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id")
+                    Write-Output (Invoke-SQLCmd -ServerInstance $Using:SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job LEFT Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id LEFT JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id")
                         
                 }
             }
 
             Default {
-                $SQLJobs = Invoke-SQLCmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job INNER Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id INNER JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id"
+                $SQLJobs = Invoke-SQLCmd -ServerInstance $SQLInstance -Database msdb -Query "SELECT Job.*, Sched.name as Schedule_Name,Sched.schedule_id FROM dbo.sysjobs as Job LEFT Join dbo.sysjobschedules as JobSched on Job.job_id = JobSched.Job_id LEFT JOIN dbo.sysschedules as Sched on JobSched.schedule_id = Sched.schedule_id"
             }
         }
 
@@ -590,7 +590,7 @@ Function New-SQLSchedule {
         # ----- This sets the defaults for FreqRecuranceFactor.  Doing it this way Because it is different depending on what FreqInterval is.  And I could not figure out how to get it to work in the parameter section
         if ( -Not $FreqRecurranceFactor ) {
             Write-Verbose "Freq = $Frequency"
-             if ( ($Frequency -eq 8) -or ($Frequency -eq 16) -or ($Frequency -eq 32) ) { 
+             if ( ($Frequency -eq 'Weekly') -or ($Frequency -eq 'Monthly') -or ($Frequency -eq 'Monthly relative to Freq_interval') ) { 
                     $FreqRecurranceFactor = 1
                 }
                 Else {
@@ -765,7 +765,7 @@ Function Get-SQLSchedule {
                                     Set-ExecutionPolicy Unrestricted
                                 }
                                 Else {
-                                    Write-Error "Running scrips on remote computer ( $Using:S ) is disabled.  See about_Execution_Policies for mor information.  Or use the -Force switch to override"
+                                    Write-Error "Running scrips on remote computer ( $Using:SQLInstance ) is disabled.  See about_Execution_Policies for mor information.  Or use the -Force switch to override"
                             }
                         }
 
