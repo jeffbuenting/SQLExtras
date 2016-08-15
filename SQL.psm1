@@ -792,6 +792,176 @@ Function Get-SQLSchedule {
 }
 
 #----------------------------------------------------------------------------------
+# SSRS Report Cmdlets
+#----------------------------------------------------------------------------------
+
+Function Upload-SSRSReport {
+
+<#
+    .Synopsis
+        Uploads an SSRS Report ( RDL File ) to SQL SSRS Server
+
+    .Description
+        Uploads a single or multiple SSRS Reports to the reporting server.  Will overwrite reports if they exist and overwrite has been selected.
+
+    .Parameter SSRSServer
+        The SSRS Server Name.
+
+    .Parameter ReportFile
+        File object representing the Report file.
+
+    .Parameter SSRSReportPath
+        SSRS Folder path where the report should be uploaded.
+
+    .Parameter Credential
+        User who has permissions to the SSRS Server
+
+    .Parameter Overwrite
+        When specified, an existing report will be overwritten.
+
+    .Example
+        Uploads the Budget Report
+
+        Upload-SSRSReport -SSRSServer jeffb-sql01.stratuslivedemo.com -ReportFile (Get-Item c:\budget.rdl) -Credential (Get-Credential Contoso\Usera ) -Overwrite -Verbose
+
+    .Link
+        https://msdn.microsoft.com/en-us/library/reportservice2010.reportingservice2010.aspx
+    
+    .Link
+        The majority of this script came from this website
+
+        http://www.geoffhudik.com/tech/2011/10/13/uploading-ssrs-reports-with-powershell.html
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 AUG 15
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter( Mandatory = $True )]
+        [string]$SSRSServer,
+
+        [Parameter( Mandatory = $True,ValueFromPipeline = $True )]
+        [System.IO.FileInfo[]]$ReportFile,
+
+        [String]$SSRSReportPath = "/",
+
+        [PSCredential]$Credential,
+
+        [Switch]$Overwrite
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+                if ( $Credential ) {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                    }
+                    else {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+                }
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.message
+                $ExceptionType = $_.Exception.GetType().FullName
+                 
+                Throw "Upload-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }
+
+        $UploadWarnings = $Null
+    }
+
+    Process {
+        Foreach ( $R in $ReportFile ) {
+            Write-Verbose "Uploading $Report"
+
+            [byte[]]$Definition = Get-Content $R -Encoding Byte
+
+            $RS.CreateCatalogItem( 'Report',$R.Name,$SSRSReportPath,$Overwrite,$Definition,$Null, [ref]$UploadWarnings )
+
+            if ( $UploadWarning ) {
+                Foreach ( $W in $UploadWarnings ) {
+                    Write-Warning "$($Warning.Message)"
+                }
+            }
+        }
+    }
+    End {
+        Write-Verbose "Cleaning up"
+        $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Get-SSRSReport {
+
+<#
+    .Synopsis
+        Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server
+
+    .Description
+        Retrieves information about the SSRS reports on the SSRS Server
+
+    .Parameter SSRSServer
+        The SSRS Server Name.
+   
+    .Example
+        Returns all reports
+
+        Get-SSRSReport -SSRSServer jeffb-sql01 -verbose
+
+    .Link
+        The majority of this script came from this website
+
+        http://www.sqlmusings.com/2012/02/04/resolving-ssrs-and-powershell-new-webserviceproxy-namespace-issue/
+        https://blogs.infosupport.com/managing-ssrs-reports-with-powershell/
+        https://msdn.microsoft.com/en-us/library/reportservice2010.reportingservice2010.aspx
+        http://www.geoffhudik.com/tech/2011/10/13/uploading-ssrs-reports-with-powershell.html
+        https://blogs.infosupport.com/managing-ssrs-reports-with-powershell/
+        http://larsenconfigmgr.blogspot.com/2015/01/powershell-script-bulk-import-ssrs.html
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 AUG 15
+#>
+
+    [CmdletBinding()]
+    Param (
+        [string]$SSRSServer
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/reportserver/ReportService2010.asmx?wsdl"
+        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential
+        
+    }
+
+    Process {
+        # Download all Reports from a specific folder to .rdl files in the current 
+        # directory.
+        
+        
+        Write-Output ($RS.ListChildren("/", $true) | Where TypeName -eq "Report")
+
+    }
+
+    End {
+        Write-Verbose "Cleaning up"
+        $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
