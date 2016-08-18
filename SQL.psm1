@@ -879,7 +879,7 @@ Function Upload-SSRSReport {
 
             [byte[]]$Definition = Get-Content $R -Encoding Byte
 
-            $RS.CreateCatalogItem( 'Report',$R.Name,$SSRSReportPath,$Overwrite,$Definition,$Null, [ref]$UploadWarnings )
+            $RS.CreateCatalogItem( 'Report',$R.BaseName,$SSRSReportPath,$Overwrite,$Definition,$Null, [ref]$UploadWarnings )
 
             if ( $UploadWarning ) {
                 Foreach ( $W in $UploadWarnings ) {
@@ -930,13 +930,28 @@ Function Get-SSRSReport {
 
     [CmdletBinding()]
     Param (
-        [string]$SSRSServer
+        [string]$SSRSServer,
+
+        [PSCredential]$Credential
     )
 
     Begin {
         Write-Verbose "Connecting to $SSRSServer"
-        $reportServerUri = "http://$SSRSServer/reportserver/ReportService2010.asmx?wsdl"
-        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+                if ( $Credential ) {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                    }
+                    else {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+                }
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.message
+                $ExceptionType = $_.Exception.GetType().FullName
+                 
+                Throw "Get-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }
         
     }
 
