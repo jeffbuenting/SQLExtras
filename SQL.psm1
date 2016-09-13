@@ -1065,7 +1065,197 @@ Function Get-SQLclientProtocol {
 
 #--------------------------------------------------------------------------------
 
+Function Get-SQLNetworkProtocol {
+
+<#
+    .Synopsis
+        lists SQL Protocol status
+
+    .Description
+        Retrieves a list of connection protocols from a SQL Server
+
+    .Parameter ComputerName
+        SQL Server Name
+
+    .Parameter Protocol
+        Name of the protocol to retrieve information about
+
+    .Parameter Credential
+        Username / Password that has permissions to the sql server.
+
+    .Example
+        Get-SQLNetworkProtocol -ComputerName 'jeffb-sql01.stratuslivedemo.com'
+
+        PSComputerName      : jeffb-sql01.stratuslivedemo.com
+        RunspaceId          : f3c6bb5a-7b1d-498d-802b-8fdf1535f789
+        Parent              : Microsoft.SqlServer.Management.Smo.Wmi.ServerInstance
+        DisplayName         : Named Pipes
+        HasMultiIPAddresses : False
+        IsEnabled           : True
+        IPAddresses         : {}
+        ProtocolProperties  : {Name=Enabled/Type=System.Boolean/Writable=True/Value=True, Name=PipeName/Type=System.String/Writable=True/Value=\\.\pipe\sql\query}
+        Urn                 : ManagedComputer[@Name='JEFFB-SQL01']/ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='np']
+        Name                : np
+        Properties          : {Name=DisplayName/Type=System.String/Writable=False/Value=Named Pipes, Name=HasMultiIPAddresses/Type=System.Boolean/Writable=False/Value=False, Name=IsEnabled/Type=System.Boolean/Writable=True/Value=True}
+        UserData            : 
+        State               : Creating
+
+        PSComputerName      : jeffb-sql01.stratuslivedemo.com
+        RunspaceId          : f3c6bb5a-7b1d-498d-802b-8fdf1535f789
+        Parent              : Microsoft.SqlServer.Management.Smo.Wmi.ServerInstance
+        DisplayName         : Shared Memory
+        HasMultiIPAddresses : False
+        IsEnabled           : True
+        IPAddresses         : {}
+        ProtocolProperties  : {Name=Enabled/Type=System.Boolean/Writable=True/Value=True}
+        Urn                 : ManagedComputer[@Name='JEFFB-SQL01']/ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='sm']
+        Name                : sm
+        Properties          : {Name=DisplayName/Type=System.String/Writable=False/Value=Shared Memory, Name=HasMultiIPAddresses/Type=System.Boolean/Writable=False/Value=False, Name=IsEnabled/Type=System.Boolean/Writable=True/Value=True}
+        UserData            : 
+        State               : Creating
+
+        PSComputerName      : jeffb-sql01.stratuslivedemo.com
+        RunspaceId          : f3c6bb5a-7b1d-498d-802b-8fdf1535f789
+        Parent              : Microsoft.SqlServer.Management.Smo.Wmi.ServerInstance
+        DisplayName         : TCP/IP
+        HasMultiIPAddresses : True
+        IsEnabled           : False
+        IPAddresses         : {Microsoft.SqlServer.Management.Smo.Wmi.ServerIPAddress, Microsoft.SqlServer.Management.Smo.Wmi.ServerIPAddress, Microsoft.SqlServer.Management.Smo.Wmi.ServerIPAddress, 
+                              Microsoft.SqlServer.Management.Smo.Wmi.ServerIPAddress...}
+        ProtocolProperties  : {Name=Enabled/Type=System.Boolean/Writable=True/Value=False, Name=KeepAlive/Type=System.Int32/Writable=True/Value=30000, Name=ListenOnAllIPs/Type=System.Boolean/Writable=True/Value=True}
+        Urn                 : ManagedComputer[@Name='JEFFB-SQL01']/ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='tcp']
+        Name                : tcp
+        Properties          : {Name=DisplayName/Type=System.String/Writable=False/Value=TCP/IP, Name=HasMultiIPAddresses/Type=System.Boolean/Writable=False/Value=True, Name=IsEnabled/Type=System.Boolean/Writable=True/Value=False}
+        UserData            : 
+        State               : Creating
+
+    .Input
+        None
+
+    .Output
+        Powershell Custom Object
+
+    .Link
+        https://msdn.microsoft.com/en-us/library/ms162567.aspx
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 SEP 09
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$ComputerName = $ENV:ComputerName,
+
+        [PSCredential]$Credential,
+
+        [ValidateSet ( 'np','sm','tcp' )]
+        [String[]]$Protocol = @('np','sm','tcp')
+    )
+
+    $ProtocolInfo = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock { 
+        
+        #----- Set verbose pref to what calling shell is set to
+        $VerbosePreference=$Using:VerbosePreference
+        
+        $Location = Get-Location
+        Import-Module SQLPS -DisableNameChecking -Verbose:$False
+        Set-Location $Location
+
+        $WMI = New-Object ('Microsoft.SQLServer.Management.SMO.Wmi.ManagedComputer')
+        
+        Foreach ( $ProtocolName in $Using:Protocol ) {
+            Write-Verbose "Getting Protocol $ProtocolName"
+            $uri = "ManagedComputer[@Name='$Env:ComputerName']/ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='$ProtocolName']"  
+            $P = $wmi.GetSmoObject($uri)    
+
+            Write-Output $P
+        }
+    }
+    Write-Output $ProtocolInfo
+}
+
 #----------------------------------------------------------------------------------
+
+Function Set-SQLNetworkProtocol {
+
+<#
+    .Synopsis
+        Changes SQL Network Protocol Settings
+
+    .Description
+        uses powershell to modify the SQL Network Protocols
+
+    .Parameter Protocol
+        Object containin information about the protocol.  Use Get-SQLNetworkProtocol to obtain object
+
+    .Parameter Credential
+        Username / Password that has permissions to the sql server.
+
+    .Parameter Enable
+        Specifies to enable or disable protocol
+
+    .Example
+        Get-SQLNetworkProtocol -ComputerName 'jeffb-sql01.stratuslivedemo.com' -Protocol tcp -Credential $Credential | Set-SQLNetworkProtocol -Enable $True -credential $Credential
+
+        Sets the TCP/IP protocol to Enabled
+
+    .Link
+        https://msdn.microsoft.com/en-us/library/ms162567.aspx
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 SEP 13
+        
+    
+#>
+
+     [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True, ValueFromPipeline = $True )]
+        [PSObject]$Protocol,
+
+        [PSCredential]$Credential,
+
+        [Parameter ( Mandatory = $True )]
+        [bool]$Enable
+    )
+
+    Process {
+        Write-verbose "Setting Protocol $($Protocol.DisplayName) on $($Protocol.SQLServer)"
+        Invoke-Command -ComputerName $Protocol.PSComputerName -ScriptBlock {
+            $Location = Get-Location
+            Import-Module SQLPS -DisableNameChecking -Verbose:$False
+            Set-Location $Location
+
+            #----- Set verbose pref to what calling shell is set to
+            $VerbosePreference=$Using:VerbosePreference
+
+            Try {
+                    $ProtocolName = $Using:Protocol.Name
+                    Write-Verbose "Protocol Name = $ProtocolName"
+
+                    $WMI = New-Object ('Microsoft.SQLServer.Management.SMO.Wmi.ManagedComputer')
+
+                    # ----- Since we may be doing this on a remote server this data will probably be deserialized so we need to re get the protocol object
+                    $uri = "ManagedComputer[@Name='JEFFB-SQL01']/ ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='$ProtocolName']"  
+                    $P = $wmi.GetSmoObject($uri) 
+                }
+                Catch {
+                    $EXceptionMessage = $_.Exception.Message
+                    $ExceptionType = $_.exception.GetType().fullname
+                    Throw "Set-SQLNetworkProtocol : Error GetSMOObject.`n`n     $ExceptionMessage`n`n     Exception : $ExceptionType" 
+            }
+             
+            # ----- Enable/Disable  protocol
+            $P.IsEnabled = $Using:Enable 
+
+            # ----- Save new protocol config
+            $P.Alter()  
+        }      
+    }
+}
+
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
