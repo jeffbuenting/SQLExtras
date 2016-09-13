@@ -971,7 +971,100 @@ Function Get-SSRSReport {
 }
 
 #----------------------------------------------------------------------------------
+# SQL Configuration Cmdlets
 #----------------------------------------------------------------------------------
+
+Function Get-SQLclientProtocol {
+
+<#
+    .Synopsis
+        lists SQL Protocol status
+
+    .Description
+        Retrieves a list of connection protocols from a SQL Server
+
+    .Parameter ComputerName
+        SQL Server Name
+
+    .Example
+        Get-SQLProtocol -ComputerName 'jeffb-sql01.stratuslivedemo.com'
+
+        DisplayName    : Named Pipes
+        State          : Existing
+        SQLServer      : 
+        Properties     : {Name=DisplayName/Type=System.String/Writable=False/Value=Named Pipes, Name=IsEnabled/Type=System.Boolean/Writable=True/Value=True, Name=NetworkLibrary/Type=System.String/Writable=False/Value=SQLNCLI11, 
+                         Name=Order/Type=System.Int32/Writable=True/Value=3}
+        Name           : np
+        Order          : 3
+        IsnEnabled     : True
+        PSComputerName : jeffb-sql01.stratuslivedemo.com
+        RunspaceId     : bfa98fe4-b4e7-4e74-b2da-07f122c0a5b9
+
+        DisplayName    : Shared Memory
+        State          : Existing
+        SQLServer      : 
+        Properties     : {Name=DisplayName/Type=System.String/Writable=False/Value=Shared Memory, Name=IsEnabled/Type=System.Boolean/Writable=True/Value=True, Name=NetworkLibrary/Type=System.String/Writable=False/Value=SQLNCLI11, 
+                         Name=Order/Type=System.Int32/Writable=True/Value=1}
+        Name           : sm
+        Order          : 1
+        IsnEnabled     : True
+        PSComputerName : jeffb-sql01.stratuslivedemo.com
+        RunspaceId     : bfa98fe4-b4e7-4e74-b2da-07f122c0a5b9
+
+        DisplayName    : TCP/IP
+        State          : Existing
+        SQLServer      : 
+        Properties     : {Name=DisplayName/Type=System.String/Writable=False/Value=TCP/IP, Name=IsEnabled/Type=System.Boolean/Writable=True/Value=True, Name=NetworkLibrary/Type=System.String/Writable=False/Value=SQLNCLI11, 
+                         Name=Order/Type=System.Int32/Writable=True/Value=2}
+        Name           : tcp
+        Order          : 2
+        IsnEnabled     : True
+        PSComputerName : jeffb-sql01.stratuslivedemo.com
+        RunspaceId     : bfa98fe4-b4e7-4e74-b2da-07f122c0a5b9
+
+    .Input
+        None
+
+    .Output
+        Powershell Custom Object
+
+    .Link
+        https://msdn.microsoft.com/en-us/library/ms191294.aspx
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 SEP 09
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$ComputerName = $ENV:ComputerName
+    )
+    
+    $Protocol = Invoke-Command -ComputerName $ComputerName -ScriptBlock {    
+        Import-Module SQLPS -Verbose:$False
+
+        $WMI = New-Object ('Microsoft.SQLServer.Management.SMO.Wmi.ManagedComputer')
+              
+        Foreach ( $W in $WMI.ClientProtocols ) {
+            Write-verbose "Protocol = $($W.Name)"
+            $P = New-Object -TypeName psobject -Property @{
+               SQLServer = $ComputerName
+                DisplayName = $W.DisplayName
+                IsnEnabled = $W.IsEnabled
+                Order = $W.Order
+                Properties = $W.Properties
+                Name = $W.Name
+                State = $W.State
+            }
+            Write-Output $P
+        }
+    }
+    Write-Output $Protocol
+}
+
+#--------------------------------------------------------------------------------
+
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------

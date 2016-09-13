@@ -46,5 +46,7 @@ $serverInstance.databases | Select-Object Name | Out-GridView -PassThru | foreac
         Copy-Item -Path c:\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\NotAutomaticallyDeleted\$BakcuName"
     }
 
+    Get-Location
+
     move-item -Path c:\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\FULL\$BackupName"
 }
