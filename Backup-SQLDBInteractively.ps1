@@ -47,6 +47,7 @@ $serverInstance.databases | Select-Object Name | Out-GridView -PassThru | foreac
     }
 
     Get-Location
+    Set-Location $Location
 
     move-item -Path c:\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\FULL\$BackupName"
 }

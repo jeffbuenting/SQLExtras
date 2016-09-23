@@ -213,12 +213,53 @@ Function Set-SQLDBLoginRoles {
 # Database Cmdlets
 #----------------------------------------------------------------------------------
 
+Function Get-SQLDatabase {
+
+<#
+    .Synopsis
+        Gets Database information for DBs on a SQL Server
+
+    .Descriptions
+        Connects to SQL Server and returns all Databases
+
+    .Parameter ServerInstance
+        Server name or Servername/Instance of the SQL Server
+
+    .Example
+        Get-SQLDatabase -ServerInstance Jeffb-Sql03.stratuslivedemo.com
+
+    .Note
+        Author : Jeff Buenting
+        Date : 23 SEP 2016
+#>
+
+    [CmdletBinding()]
+    param (
+        [Parameter ( Mandatory = $True, Position = 0 ) ]
+        [String]$ServerInstance
+    )
+
+    Process {
+        Write-Verbose "Making connection to SQL server: $ServerInstance"
+        [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.SMO") | out-null
+        $SMOserver = New-Object ('Microsoft.SqlServer.Management.Smo.Server') -argumentlist $ServerInstance
+
+        Write-verbose "Get Databases from $ServerInstance"
+        $SMOServer.Databases | Foreach { Write-Output $_ }
+    }
+}
+
+#----------------------------------------------------------------------------------
+
 Function Remove-SQLDatabase {
 
-    [CmdBinding()]
+    [CmdletBinding()]
     param (
+        [Parameter ( Mandatory = $True, Position = 0 )]
         [String]$ServerInstance,
 
+        [Parameter ( Mandatory = $True, Position = 1, ValueFromPipeLine = $True ) ]
+        [Alias ( 'Name' ) ]
         [String[]]$Database
     )
 
@@ -255,6 +296,86 @@ Function Remove-SQLDatabase {
     }
 
 }
+
+#----------------------------------------------------------------------------------
+
+Function Refresh-SQLDatabase  {
+    
+<#
+    .Synopsis
+        Refreshesh an existing DB.
+
+    .Description
+        Deletes and Restores a DB on a SQL Server
+
+    .Parameter ServerInstance
+        Computername or Computername / Instance of SQL Server
+
+    .Parameter BackupFile
+        File object for the Database SQL Backup
+
+    .Parameter Database
+        Name of the Database to refresh
+
+    .Example
+        Refresh-SQLDatabase -ComputerName Jeffb-SQL03.Contoso.com -BackupFile \\Storage.Contoso.com\SQL_Backups\SQL02\r7_MSCRM\FULL\SQL02_R7_MSCRM_FULL_20160922_002214.bak
+
+    .Note
+        I created this as I got tired of doing this manually for our developers
+
+    .Note
+        ServerIntance currently assumes Computername.  Not COmputername/instance.  Need to fix this once I have a reason to.
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 Sep 23
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True, Position = 0 )]
+        [String]$ServerInstance,
+
+        [Parameter( Mandatory = $True, Position = 1, ValueFromPipeline = $True)]
+        [System.IO.FileInfo]$BackupFile,
+
+        [Parameter( Position = 2 ) ]
+        [String]$Database
+
+        
+    )
+
+    Begin {
+        # ----- SQL module likes to switch to the SQL Server Provider.  This causes issues with file system cmdlets.  To work around this Save the current location and then if need be change back to it.
+        $Location = Get-Location
+    }
+
+    Process {
+        # ----- If no database name is supplied, then we will extract the DB name from our backupfile naming convention
+        if ( -Not $Database ) {
+            $BackupFile.name -match '[^_]*_(.*)(?=_FULL)|(?=_LOG)|(?=DIFF)' | Out-Null
+            $Database = $Matches[1]
+        }
+
+        # ----- Delete the Existing DB
+        Get-SQLDatabase -ServerInstance $ServerInstance | where Name -eq $Database | Remove-SQLDatabase -ServerInstance $ServerInstance
+
+        if ( -Not (Test-Path -Path "\\$ServerInstance\c$\Temp") ) { New-Item -Path "\\$ServerInstance\c$\Temp" -ItemType Directory }
+
+        # ----- Copy the backup file to the server.  Not doing this throws an access denied error when accessing the share.  CredSSP does not help.
+        $BackupFile | Copy-Item -Destination \\$ServerInstance\c$\temp 
+
+        Write-Verbose "Restoring $Database to $ServerInstance from $($BackupFile.FullName)"
+        Restore-SqlDatabase -ServerInstance $ServerInstance -Database $Database -BackupFile c:\Temp\$($BackupFile.Name)
+    }
+
+    End {
+        # ----- Clean up
+        Remove-Item \\$ServerInstance\c$\Temp\$($BackupFile.Name) -Force
+    }
+
+}
+
 
 #----------------------------------------------------------------------------------
 # SQL Job Cmdlets
