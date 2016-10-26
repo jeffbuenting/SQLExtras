@@ -1705,6 +1705,100 @@ Function Get-SQLDBMail {
 }
 
 #----------------------------------------------------------------------------------
+
+Function Get-SQLDBMailAccount {
+
+<#
+    .Synopsis
+        Retrieves a SQL DB Mail Account
+
+    .Description
+        Retrieves a SQL DB Mail Account
+
+    .ParameterComputername
+        SQL Server Name/Instance.  If the default instance is used then the computername only will suffice.
+
+    .Parameter Credential
+        By default, this cmdlet will connect to the SQL Server using the current logged in account.  Provide Credentials if you need to use a different account.
+
+    .parameter DBMail
+        SQL DB Mail Object.  Use Get-SQLDBMail to obtain this object.
+
+    .Parameter AccountName
+        Name of a SQL DB Mail Account
+
+    .Link
+        https://technet.microsoft.com/en-us/library/ms188668(v=sql.105).aspx
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 OCT 26
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Position = 0,Mandatory = $True ) ]
+        [String[]]$ComputerName,
+
+        [Parameter ( Position = 1 ) ]
+        [PSCredential]$Credential,
+
+        [Parameter ( ParameterSetName = 'DBMailObject', Position = 2 ) ]
+        [psobject]$DBMail,
+
+        [Parameter ( ParameterSetName = 'AccountName', Position = 2 ) ]
+        [String[]]$AccountName
+    )
+
+    Process {
+        Switch ( $PSCmdlet.ParameterSetName ) {
+            'DBMailObject' {
+                Write-verbose "ParameterSetName DBMailObject"
+                # ----- Extract the Account Names from the DB Mail Object
+                $AccountName = $DBMail.Accounts
+            }
+
+            'AccountName' {
+                Write-verbose "ParameterSetName AccountName"
+                # ----- Already have the account Names
+            }
+        }
+
+        Write-verbose "Account Names = $($AccountName | out-string)"
+        Write-Verbose "Count = $($AccountName | Measure-object | out-string ) "
+
+        if ( $Credential ) { 
+                $Session = New-PSSession -ComputerName $ComputerName -Credential $Credential
+            }
+            Else {
+                $Session = New-PSSession -ComputerName $ComputerName
+        }
+
+        Invoke-Command -Session $Session -ScriptBlock {
+             $VerbosePreference=$Using:VerbosePreference
+
+             # ----- Reget the DB Mail object as the one we passed in was deserialized.
+            [system.reflection.assembly]::loadwithpartialname('Microsoft.sqlserver.smo') 
+
+            $serverConnection = new-object Microsoft.SqlServer.Management.Common.ServerConnection
+            $serverConnection.ServerInstance=$using:ComputerName
+           
+            $server = new-object Microsoft.SqlServer.Management.SMO.Server($Using:ComputerName)
+
+            Foreach ( $A in $Using:AccountName ) {
+                if ( $A -eq '' ) { Continue }
+                Write-Verbose "Getting Account Name : $A"
+                               
+                Invoke-Sqlcmd -ServerInstance $ComputerName -Database MSDB -Query "SELECT * FROM [dbo].[sysmail_account] where name = '$A'"
+             
+            }
+        }
+            
+        Remove-PSSession $Session
+    }
+
+}
+
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
