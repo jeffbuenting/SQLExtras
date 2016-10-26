@@ -1623,7 +1623,87 @@ Function Set-SQLNetworkProtocol {
 }
 
 #----------------------------------------------------------------------------------
+# DataBase Mail Cmdlets
 #----------------------------------------------------------------------------------
+
+Function Get-SQLDBMail {
+
+<#
+    .Synopsis
+        Retrieves the SQL DB Mail Settings
+
+    .Descriptions
+        Retrieves the SQL Database Mail Settings
+
+    .Parameter Computername
+        SQL Server Name/Instance.  If the default instance is used then the computername only will suffice.
+
+    .Parameter Credential
+        By default, this cmdlet will connect to the SQL Server using the current logged in account.  Provide Credentials if you need to use a different account.
+
+    .Example
+        Get-SQLDBMail -Computername ServerA -Credential $cloudaccount
+
+        Enabled             : True
+        PSComputerName      : ServerA
+        RunspaceId          : 
+        Parent              : [Server]
+        Profiles            : {[Mail]}
+        Accounts            : {[SQLAlerts]}
+        ConfigurationValues : {[AccountRetryAttempts], [AccountRetryDelay], [DatabaseMailExeMinimumLifeTime], [DefaultAttachmentEncoding]...}
+        Urn                 : Server[@Name='ServerA']/Mail
+        Properties          : {}
+        UserData            : 
+        State               : Existing
+
+    .Link
+        http://sqlmag.com/powershell/script-your-database-mail-setup
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2016 OCT 26
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Position = 0,Mandatory = $True, ValueFromPipeline = $True ) ]
+        [String[]]$ComputerName,
+
+        [Parameter ( Position = 1 ) ]
+        [PSCredential]$Credential
+    )
+
+    Process     {
+        Foreach ( $C in $ComputerName ) {
+            Write-Verbose "Getting Database Mail settings for $C"
+
+            if ( $Credential ) { 
+                    $Session = New-PSSession -ComputerName $C -Credential $Credential
+                }
+                Else {
+                    $Session = New-PSSession -ComputerName $C
+            }
+
+            Invoke-Command -Session $Session -ScriptBlock {
+                # ----- Establish Connection to SQL Server
+                write-Verbose "Establishing connection to server"
+                [system.reflection.assembly]::loadwithpartialname('Microsoft.sqlserver.smo') 
+
+                $serverConnection = new-object Microsoft.SqlServer.Management.Common.ServerConnection
+                $serverConnection.ServerInstance=$C
+           
+                $server = new-object Microsoft.SqlServer.Management.SMO.Server($Using:C)
+
+                $MailSettings = $Server.Mail
+
+                $MailSettings | Add-Member -MemberType NoteProperty -Name 'Enabled' -value ([Bool]( $Server.Configuration.DatabaseMailEnabled.ConfigValue ))
+
+                Write-Output $MailSettings
+            }
+        }
+    }
+}
+
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
