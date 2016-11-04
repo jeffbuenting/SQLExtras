@@ -9,15 +9,27 @@
 # CHANGE the $NotAutomaticallyDeleted switch to $True if you want to retain a copy that will not be automatically cleaned up when the OLA scripts are run.
 #--------------------------------------------------------------------------------------
 
-#$BULocation = "\\RWVA-Storage\e$\SQLBackups"
+# ----- Select a backup location
+#$PotentialBackupPaths = "\\RWVA-Storage\e$\SQLBackups","\\vaslnas.stratuslivedemo.com\SL_SQL_Backups"
+
+#$BULocation = $PotentialBackupPaths | Out-GridView -OutputMode Single -Title 'Select a backup location'
+
+#if ( -Not $BULocation ) {
+#    # ----- BULocation is Null.  Select custom location
+#    Throw "Currently custom locations are not supported.  Rerun and select one of the Potential Backup Paths"
+#}
+
 $BULocation = "\\vaslnas.stratuslivedemo.com\SL_SQL_Backups"
 
-$NotAutomaticallyDeleted = $False
-
 #--------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------
 
-$SQLServer = $env:COMPUTERNAME
+#$SQLServer = $env:COMPUTERNAME
+# ----- Choose a SQL server from the list
+$SQLServer = get-adcomputer -Filter "Name -like '*sql*'" | Select-Object Name,DNSHostName | Out-GridView -OutputMode Single -Title 'Select a SQL Server' | Select-Object -ExpandProperty DNSHostName
+if ( -Not $SQLServer ) { Throw "SQLServer cannot be Null.  Rerun and select one SQL Server" }
+
+$NotAutomaticallyDeleted = [bool]('False','True' | Out-GridView -OutputMode Single -Title 'Prevent scheduled scavenging of the backup' )
 
 # ----- SQL SMO will switch to the SQL Provider.  This causes issues when doing other stuff.  So setting the location to what it was prior to connecting the SMO provider
 $Location = Get-Location
@@ -25,7 +37,7 @@ $Location = Get-Location
 $serverInstance = New-Object ('Microsoft.SqlServer.Management.Smo.Server') "$SQLServer"
 Set-Location $Location
 
-$serverInstance.databases | Select-Object Name | Out-GridView -PassThru | foreach { 
+$serverInstance.databases | Select-Object Name | Out-GridView -Title "Select Databases to Backup" -PassThru | foreach { 
     
     # ----- Checking if the SQL is FQDN. Splitting out the NetBIOS name as that is what we use in the folder and naming convention
     $ServerName = ($sqlserver.Split('.'))[0].ToUpper()
@@ -43,11 +55,23 @@ $serverInstance.databases | Select-Object Name | Out-GridView -PassThru | foreac
     # ----- Copy Backup to a location that is not automatically cleaned.  Older backups won't be deleted.
     if ( $NotAutomaticallyDeleted ) {
         if ( -Not ( Test-Path -Path "$BULocation\$ServerName\$($_.Name)\NotAutomaticallyDeleted" ) ) { New-Item -Path "$BULocation\$ServerName\$($_.Name)\NotAutomaticallyDeleted" -ItemType Directory }
-        Copy-Item -Path c:\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\NotAutomaticallyDeleted\$BakcuName"
+
+        # ----- Check if SQL server is the local server
+        if ( $SQLServer -ne $env:COMPUTERNAME ) {
+                Copy-Item -Path \\$SQLServer\c$\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\NotAutomaticallyDeleted\$BackupName"
+            }
+            Else {
+                Copy-Item -Path c:\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\NotAutomaticallyDeleted\$BackupName"
+        }
     }
 
     Get-Location
     Set-Location $Location
-
-    move-item -Path c:\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\FULL\$BackupName"
+    # ----- Check if SQL server is the local server
+    if ( $SQLServer -ne $env:COMPUTERNAME ) {
+            move-item -Path \\$SQLServer\c$\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\FULL\$BackupName"
+        }
+        Else {
+            move-item -Path c:\temp\$BackupName -Destination "$BULocation\$ServerName\$($_.Name)\FULL\$BackupName"
+    }
 }
