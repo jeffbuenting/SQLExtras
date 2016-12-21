@@ -498,7 +498,7 @@ Function Get-SQLDatabase {
 
 Function Remove-SQLDatabase {
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $True)]
     param (
         [Parameter ( Mandatory = $True, Position = 0 )]
         [String]$ServerInstance,
@@ -510,12 +510,12 @@ Function Remove-SQLDatabase {
 
     Begin {
         # ----- Load the SQL module if not already loaded
-        if ( -Not (Get-module -Name SQLPS) ) {
-            Write-Verbose 'Importing SQL Module as it is not already installed'
-            $SQLModuleInstalled = $False
-            $Location = $PWD
-            import-module 'C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\SQLPS\sqlps' -disablenamechecking 
-        }
+  #      if ( -Not (Get-module -Name SQLPS) ) {
+  #          Write-Verbose 'Importing SQL Module as it is not already installed'
+  #          $SQLModuleInstalled = $False
+  #          $Location = $PWD
+  #          import-module 'C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\SQLPS\sqlps' -disablenamechecking 
+  #      }
         
         Write-Verbose "Making connection to SQL server: $ServerInstance"
         [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.SMO") | out-null
@@ -524,20 +524,22 @@ Function Remove-SQLDatabase {
 
     Process {
         foreach ( $DB in $Database ) {
-            $smoserver.killallprocess($DB)
-            $smoserver.databases[$DB].drop() 
+            Write-Verbose "Dropping Databse $DB"
+           # $smoserver.killallprocess($DB)
+           # $smoserver.databases[$DB].drop() 
+            invoke-sqlcmd -ServerInstance $ServerInstance -Query "Drop database $DB;" -
         }
     }
 
     End {
         Remove-Variable -Name $SMOServer
 
-        if ( $SQLModuleInstalled ) {
-            # ----- Cleanup
-            Write-Verbose 'Removing SQL Module'
-            Set-Location -Path $Location
-            Remove-Module SQLPS
-        }
+ #       if ( $SQLModuleInstalled ) {
+ #           # ----- Cleanup
+ #           Write-Verbose 'Removing SQL Module'
+ #           Set-Location -Path $Location
+ #           Remove-Module SQLPS
+ #       }
     }
 
 }
