@@ -298,13 +298,13 @@ Function Get-SQLDBLoginRoles {
     )
 
     Begin {
-        # ----- Load the SQL module if not already loaded
-        if ( -Not (Get-module -Name SQLPS) ) {
-            Write-Verbose 'Importing SQL Module as it is not already installed'
-            $SQLModuleInstalled = $False
-            $Location = $PWD
-            import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
-        }
+    #    # ----- Load the SQL module if not already loaded
+    #    if ( -Not (Get-module -Name SQLPS) ) {
+    #        Write-Verbose 'Importing SQL Module as it is not already installed'
+    #        $SQLModuleInstalled = $False
+    #        $Location = $PWD
+    #        import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
+    #    }
 
         # ----- Establish Connection to SQL Server
         write-Verbose "Establishing connection to server"
@@ -349,12 +349,12 @@ Function Get-SQLDBLoginRoles {
 
     End {
         $server.ConnectionContext.Disconnect()
-        if ( $SQLModuleInstalled ) {
-            # ----- Cleanup
-            Write-Verbose 'Removing SQL Module'
-            Set-Location -Path $Location
-            Remove-Module SQLPS
-        }
+   #     if ( $SQLModuleInstalled ) {
+   #         # ----- Cleanup
+   #         Write-Verbose 'Removing SQL Module'
+   #         Set-Location -Path $Location
+   #         Remove-Module SQLPS
+   #     }
     }
     
 }
@@ -400,13 +400,13 @@ Function Set-SQLDBLoginRoles {
     )
 
     Begin {
-        # ----- Load the SQL module if not already loaded
-        if ( -Not (Get-module -Name SQLPS) ) {
-            Write-Verbose 'Importing SQL Module as it is not already installed'
-            $SQLModuleInstalled = $False
-            $Location = $PWD
-            import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
-        }
+     #   # ----- Load the SQL module if not already loaded
+     #   if ( -Not (Get-module -Name SQLPS) ) {
+     #       Write-Verbose 'Importing SQL Module as it is not already installed'
+     #       $SQLModuleInstalled = $False
+     #       $Location = $PWD
+     #       import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
+     #   }
 
         # ----- Establish Connection to SQL Server
         $serverConnection = new-object Microsoft.SqlServer.Management.Common.ServerConnection
@@ -444,13 +444,13 @@ Function Set-SQLDBLoginRoles {
 
     End {
        # $server.ConnectionContext.Disconnect()
-        if ( $SQLModuleInstalled ) {
-            # ----- Cleanup
-            Write-Verbose 'Removing SQL Module'
-            Set-Location -Path $Location
-            Remove-Module SQLPS
-        }
-    }
+  #      if ( $SQLModuleInstalled ) {
+  #          # ----- Cleanup
+  #          Write-Verbose 'Removing SQL Module'
+  #          Set-Location -Path $Location
+  #          Remove-Module SQLPS
+  #      }
+  #  }
 
 }
 
@@ -1521,7 +1521,17 @@ Function Get-SQLNetworkProtocol {
         [String[]]$Protocol = @('np','sm','tcp')
     )
 
-    $ProtocolInfo = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock { 
+
+    # ----- Checking if Credential was included.  If user running cmdlet has permissions to SQL then no need to include them.
+    if ( $Credential ) 
+    {
+        $Session = New-PSSession -ComputerName $ComputerName -Credential $Credential
+    }
+    Else {
+        $Session = New-PSSession -ComputerName $ComputerName 
+    }
+
+    $ProtocolInfo = Invoke-Command -Session $Session -ScriptBlock { 
         
         #----- Set verbose pref to what calling shell is set to
         $VerbosePreference=$Using:VerbosePreference
