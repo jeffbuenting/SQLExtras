@@ -1547,11 +1547,19 @@ Function Get-SQLNetworkProtocol {
 
     $ProtocolInfo = Invoke-Command -Session $Session -ScriptBlock { 
         
+        # ----- this module switches the location to the SQL provider which causes issues with other cmdlets.  So I account for that with the Get/Set Location
+        # ----- Disabling Verbose if it is on so the Import-Module does not spit abunch of stuff onto the Verbose Stream
+        $SavedVerbosePref = $Using:VerbosePreference
+        $VerbosePreference = 'SilentlyContinue'
+        $Location = Get-Location
+        Import-Module SQLPS -DisableNameChecking -Verbose:$False | out-Null
+        Set-Location $Location
+
         #----- Set verbose pref to what calling shell is set to
-        $VerbosePreference=$Using:VerbosePreference
+        $VerbosePreference=$SavedVerbosePref
         
         $Location = Get-Location
-        Import-Module SQLPS -DisableNameChecking -Verbose:$False
+        Import-Module SQLPS -DisableNameChecking -Verbose:$False | out-Null
         Set-Location $Location
 
         $WMI = New-Object ('Microsoft.SQLServer.Management.SMO.Wmi.ManagedComputer')
@@ -1616,12 +1624,17 @@ Function Set-SQLNetworkProtocol {
     Process {
         Write-verbose "Setting Protocol $($Protocol.DisplayName) on $($Protocol.SQLServer)"
         Invoke-Command -ComputerName $Protocol.PSComputerName -ScriptBlock {
+        
+            # ----- this module switches the location to the SQL provider which causes issues with other cmdlets.  So I account for that with the Get/Set Location
+            # ----- Disabling Verbose if it is on so the Import-Module does not spit abunch of stuff onto the Verbose Stream
+            $SavedVerbosePref = $Using:VerbosePreference
+            $VerbosePreference = 'SilentlyContinue'
             $Location = Get-Location
-            Import-Module SQLPS -DisableNameChecking -Verbose:$False
+            Import-Module SQLPS -DisableNameChecking -Verbose:$False | out-Null
             Set-Location $Location
 
             #----- Set verbose pref to what calling shell is set to
-            $VerbosePreference=$Using:VerbosePreference
+            $VerbosePreference=$SavedVerbosePref
 
             Try {
                     $ProtocolName = $Using:Protocol.Name
