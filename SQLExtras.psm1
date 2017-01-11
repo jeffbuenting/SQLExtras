@@ -288,7 +288,8 @@ Function Get-SQLDBLoginRoles {
 
 
     [CmdletBinding()]
-    Param (
+    Param 
+    (
         [String]$ServerInstance="localhost",
 
         [Parameter(ValueFromPipeline=$true)]
@@ -297,36 +298,41 @@ Function Get-SQLDBLoginRoles {
         [String]$Login
     )
 
-    Begin {
-    #    # ----- Load the SQL module if not already loaded
-    #    if ( -Not (Get-module -Name SQLPS) ) {
-    #        Write-Verbose 'Importing SQL Module as it is not already installed'
-    #        $SQLModuleInstalled = $False
-    #        $Location = $PWD
-    #        import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
-    #    }
+    Begin 
+    {
+        #    # ----- Load the SQL module if not already loaded
+        #    if ( -Not (Get-module -Name SQLPS) ) {
+        #        Write-Verbose 'Importing SQL Module as it is not already installed'
+        #        $SQLModuleInstalled = $False
+        #        $Location = $PWD
+        #        import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
+        #    }
 
         # ----- Establish Connection to SQL Server
         write-Verbose "Establishing connection to server"
         $serverConnection = new-object Microsoft.SqlServer.Management.Common.ServerConnection
         $serverConnection.ServerInstance=$serverInstance
-
     }
 
-    Process {
+    Process 
+    {
         # ----- Connect to Database
         Write-Verbose "Getting User info for Database: $DatabaseName"
         $server = new-object Microsoft.SqlServer.Management.SMO.Server($serverConnection)
-        if ( [String]::isNullorEmpty($databaseName) ) {
-                Write-Verbose "Returning Login Permissions from every database"
-                $DataBases = $Server.Databases
-            }
-            else {
-                $databases = $server.Databases[$databaseName]
+        if ( [String]::isNullorEmpty($databaseName) ) 
+        {
+            Write-Verbose "Returning Login Permissions from every database"
+            $DataBases = $Server.Databases
+        }
+        else 
+        {
+            $databases = $server.Databases[$databaseName]
         }
         
-        forEach ( $DB in $databases ) {
-            foreach($user in $DB.Users) {
+        forEach ( $DB in $databases ) 
+        {
+            foreach($user in $DB.Users) 
+            {
                 Write-Verbose "Permissions for User: $User"
                
                 $SQLLogin = New-object -TypeName PSCustomObject -Property @{
@@ -334,27 +340,30 @@ Function Get-SQLDBLoginRoles {
                     'Roles' = $User.EnumRoles()
                     'DataBase' = $DB.Name
                 }
-                if ( [String]::IsNullOrEmpty($Login) ) {
-                        Write-Output $SQLLogin
-                    }
-                    else {
-                        if ( $SQLLogin.Login -eq $Login ) {
-                            Write-OutPut $SQLLogin
-                        }
-                }
 
+                if ( [String]::IsNullOrEmpty($Login) ) 
+                {
+                    Write-Output $SQLLogin
+                }
+                else {
+                    if ( $SQLLogin.Login -eq $Login ) 
+                    {
+                        Write-OutPut $SQLLogin
+                    }
+                }
             }
-       }
+        }
     }
 
-    End {
+    End 
+    {
         $server.ConnectionContext.Disconnect()
-   #     if ( $SQLModuleInstalled ) {
-   #         # ----- Cleanup
-   #         Write-Verbose 'Removing SQL Module'
-   #         Set-Location -Path $Location
-   #         Remove-Module SQLPS
-   #     }
+        #     if ( $SQLModuleInstalled ) {
+        #         # ----- Cleanup
+        #         Write-Verbose 'Removing SQL Module'
+        #         Set-Location -Path $Location
+        #         Remove-Module SQLPS
+        #     }
     }
     
 }
@@ -387,7 +396,8 @@ Function Set-SQLDBLoginRoles {
 #>
 
     [CmdletBinding()]
-    Param (
+    Param 
+    (
         [String]$ServerInstance="localhost",
 
         [Parameter(ValueFromPipeline=$true)]
@@ -399,14 +409,15 @@ Function Set-SQLDBLoginRoles {
         [String[]]$DBRole
     )
 
-    Begin {
-     #   # ----- Load the SQL module if not already loaded
-     #   if ( -Not (Get-module -Name SQLPS) ) {
-     #       Write-Verbose 'Importing SQL Module as it is not already installed'
-     #       $SQLModuleInstalled = $False
-     #       $Location = $PWD
-     #       import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
-     #   }
+    Begin 
+    {
+        #   # ----- Load the SQL module if not already loaded
+        #   if ( -Not (Get-module -Name SQLPS) ) {
+        #       Write-Verbose 'Importing SQL Module as it is not already installed'
+        #       $SQLModuleInstalled = $False
+        #       $Location = $PWD
+        #       import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
+        #   }
 
         # ----- Establish Connection to SQL Server
         $serverConnection = new-object Microsoft.SqlServer.Management.Common.ServerConnection
@@ -415,7 +426,8 @@ Function Set-SQLDBLoginRoles {
 
     }
 
-    Process {
+    Process 
+    {
         # ----- Check if Role already set.  
         $ExistingLogins = Get-SQLDBLoginRoles -ServerInstance $ServerInstance -databaseName $databaseName -Login $Login
         
@@ -442,16 +454,16 @@ Function Set-SQLDBLoginRoles {
         
     }
 
-    End {
-       # $server.ConnectionContext.Disconnect()
-  #      if ( $SQLModuleInstalled ) {
-  #          # ----- Cleanup
-  #          Write-Verbose 'Removing SQL Module'
-  #          Set-Location -Path $Location
-  #          Remove-Module SQLPS
-  #      }
-  #  }
-
+    End 
+    {
+      #     # $server.ConnectionContext.Disconnect()
+      #      if ( $SQLModuleInstalled ) {
+      #          # ----- Cleanup
+      #          Write-Verbose 'Removing SQL Module'
+      #          Set-Location -Path $Location
+      #          Remove-Module SQLPS
+      #      }
+    }
 }
 
 #----------------------------------------------------------------------------------
@@ -1525,9 +1537,11 @@ Function Get-SQLNetworkProtocol {
     # ----- Checking if Credential was included.  If user running cmdlet has permissions to SQL then no need to include them.
     if ( $Credential ) 
     {
+        Write-Verbose "Connecting with Credentials"
         $Session = New-PSSession -ComputerName $ComputerName -Credential $Credential
     }
     Else {
+        Write-Verbose "Connecting without credentials"
         $Session = New-PSSession -ComputerName $ComputerName 
     }
 
