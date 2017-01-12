@@ -1513,7 +1513,7 @@ Function Get-SQLNetworkProtocol {
         None
 
     .Output
-        Powershell Custom Object
+        Powershell Deserialized Object
 
     .Link
         https://msdn.microsoft.com/en-us/library/ms162567.aspx
@@ -1547,16 +1547,8 @@ Function Get-SQLNetworkProtocol {
 
     $ProtocolInfo = Invoke-Command -Session $Session -ScriptBlock { 
         
-        # ----- this module switches the location to the SQL provider which causes issues with other cmdlets.  So I account for that with the Get/Set Location
-        # ----- Disabling Verbose if it is on so the Import-Module does not spit abunch of stuff onto the Verbose Stream
-        $SavedVerbosePref = $Using:VerbosePreference
-        $VerbosePreference = 'SilentlyContinue'
-        $Location = Get-Location
-        Import-Module SQLPS -DisableNameChecking -Verbose:$False | out-Null
-        Set-Location $Location
-
         #----- Set verbose pref to what calling shell is set to
-        $VerbosePreference=$SavedVerbosePref
+        $VerbosePreference=$Using:VerbosePreference
         
         $Location = Get-Location
         Import-Module SQLPS -DisableNameChecking -Verbose:$False | out-Null
@@ -1568,10 +1560,12 @@ Function Get-SQLNetworkProtocol {
             Write-Verbose "Getting Protocol $ProtocolName"
             $uri = "ManagedComputer[@Name='$Env:ComputerName']/ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='$ProtocolName']"  
             $P = $wmi.GetSmoObject($uri)    
-
+            
             Write-Output $P
         }
     }
+
+    
     Write-Output $ProtocolInfo
 }
 
@@ -1586,8 +1580,11 @@ Function Set-SQLNetworkProtocol {
     .Description
         uses powershell to modify the SQL Network Protocols
 
+    .Parameter ComputerName
+        Name of the SQL server to configure.
+
     .Parameter Protocol
-        Object containin information about the protocol.  Use Get-SQLNetworkProtocol to obtain object
+        Protocol to enable in SQL.  
 
     .Parameter Credential
         Username / Password that has permissions to the sql server.
@@ -1596,7 +1593,7 @@ Function Set-SQLNetworkProtocol {
         Specifies to enable or disable protocol
 
     .Example
-        Get-SQLNetworkProtocol -ComputerName 'jeffb-sql01.stratuslivedemo.com' -Protocol tcp -Credential $Credential | Set-SQLNetworkProtocol -Enable $True -credential $Credential
+        Set-SQLNetworkProtocol -computerName 'ServerA' -Protocol 'np','tcp' -Enable $True -credential $Credential
 
         Sets the TCP/IP protocol to Enabled
 
@@ -1612,44 +1609,58 @@ Function Set-SQLNetworkProtocol {
 
      [CmdletBinding()]
     Param (
-        [Parameter ( Mandatory = $True, ValueFromPipeline = $True )]
-        [PSObject]$Protocol,
+        [String]$ComputerName = $ENV:ComputerName,
 
         [PSCredential]$Credential,
+
+        [Parameter( Mandatory = $True)]
+        [ValidateSet ( 'np','sm','tcp' )]
+        [String]$Protocol,
 
         [Parameter ( Mandatory = $True )]
         [bool]$Enable
     )
 
     Process {
-        Write-verbose "Setting Protocol $($Protocol.DisplayName) on $($Protocol.SQLServer)"
-        Invoke-Command -ComputerName $Protocol.PSComputerName -ScriptBlock {
+        Write-verbose "Setting Protocol $($Protocol.DisplayName) on $Computername"
+
+         # ----- Checking if Credential was included.  If user running cmdlet has permissions to SQL then no need to include them.
+        if ( $Credential ) 
+        {
+            Write-Verbose "Connecting with Credentials"
+            $Session = New-PSSession -ComputerName $ComputerName -Credential $Credential
+        }
+        Else {
+            Write-Verbose "Connecting without credentials"
+            $Session = New-PSSession -ComputerName $ComputerName 
+        }
+
+        Invoke-Command -Session $Session -ScriptBlock {
         
             # ----- this module switches the location to the SQL provider which causes issues with other cmdlets.  So I account for that with the Get/Set Location
             # ----- Disabling Verbose if it is on so the Import-Module does not spit abunch of stuff onto the Verbose Stream
-            $SavedVerbosePref = $Using:VerbosePreference
-            $VerbosePreference = 'SilentlyContinue'
             $Location = Get-Location
             Import-Module SQLPS -DisableNameChecking -Verbose:$False | out-Null
             Set-Location $Location
 
             #----- Set verbose pref to what calling shell is set to
-            $VerbosePreference=$SavedVerbosePref
+            $VerbosePreference=$Using:VerbosePreference
 
-            Try {
-                    $ProtocolName = $Using:Protocol.Name
-                    Write-Verbose "Protocol Name = $ProtocolName"
+            Try 
+            {
+                
+                Write-Verbose "Protocol Name = $Using:Protocol"
 
-                    $WMI = New-Object ('Microsoft.SQLServer.Management.SMO.Wmi.ManagedComputer')
+                $WMI = New-Object ('Microsoft.SQLServer.Management.SMO.Wmi.ManagedComputer')
 
-                    # ----- Since we may be doing this on a remote server this data will probably be deserialized so we need to re get the protocol object
-                    $uri = "ManagedComputer[@Name='JEFFB-SQL01']/ ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='$ProtocolName']"  
-                    $P = $wmi.GetSmoObject($uri) 
-                }
-                Catch {
-                    $EXceptionMessage = $_.Exception.Message
-                    $ExceptionType = $_.exception.GetType().fullname
-                    Throw "Set-SQLNetworkProtocol : Error GetSMOObject.`n`n     $ExceptionMessage`n`n     Exception : $ExceptionType" 
+                $uri = "ManagedComputer[@Name='$Env:ComputerName']/ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='$Using:Protocol']" 
+                $P = $wmi.GetSmoObject($uri) 
+            }
+            Catch 
+            {
+                $EXceptionMessage = $_.Exception.Message
+                $ExceptionType = $_.exception.GetType().fullname
+                Throw "Set-SQLNetworkProtocol : Error GetSMOObject.`n`n     $ExceptionMessage`n`n     Exception : $ExceptionType" 
             }
              
             # ----- Enable/Disable  protocol
