@@ -1668,6 +1668,18 @@ Function Set-SQLNetworkProtocol {
 
             # ----- Save new protocol config
             $P.Alter()  
+
+            # ----- Must restart the sql service for changes to take effect
+            Try
+            {
+                Restart-Service -Name MSSQLSERVER 
+            }
+            Catch 
+            {
+                $EXceptionMessage = $_.Exception.Message
+                $ExceptionType = $_.exception.GetType().fullname
+                Throw "Set-SQLNetworkProtocol : Error restarting the SQL Service.`n`n     $ExceptionMessage`n`n     Exception : $ExceptionType" 
+            }
         }      
     }
 }
