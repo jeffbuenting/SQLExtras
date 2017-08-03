@@ -1212,7 +1212,7 @@ Function Upload-SSRSReport {
 
         http://www.geoffhudik.com/tech/2011/10/13/uploading-ssrs-reports-with-powershell.html
 
-    .Note
+    .Notes
         Author : Jeff Buenting
         Date : 2016 AUG 15
 #>
@@ -1255,16 +1255,27 @@ Function Upload-SSRSReport {
 
     Process {
         Foreach ( $R in $ReportFile ) {
-            Write-Verbose "Uploading $Report"
+            Write-Verbose "Uploading $($R.Name)"
 
-            [byte[]]$Definition = Get-Content $R -Encoding Byte
+            
 
-            $RS.CreateCatalogItem( 'Report',$R.BaseName,$SSRSReportPath,$Overwrite,$Definition,$Null, [ref]$UploadWarnings )
+            Try {
+                [byte[]]$Definition = Get-Content $R.FullName -Encoding Byte
 
-            if ( $UploadWarning ) {
-                Foreach ( $W in $UploadWarnings ) {
-                    Write-Warning "$($Warning.Message)"
+                $RS.CreateCatalogItem( 'Report',$R.BaseName,$SSRSReportPath,$Overwrite,$Definition,$Null, [ref]$UploadWarnings )
+
+                if ( $UploadWarnings ) {
+                    Foreach ( $W in $UploadWarnings ) {
+                        Write-Verbose "Warning : $($W.Message)"
+                        Write-Warning "$($W.Message)"
+                    }
                 }
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.message
+                $ExceptionType = $_.Exception.GetType().FullName
+                 
+                Throw "Upload-SSRSReport : Problem uploading the report to $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
             }
         }
     }
