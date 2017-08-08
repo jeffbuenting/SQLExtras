@@ -127,5 +127,114 @@ Describe "SQLExtras : Upload-SSRSReport" {
 
             Upload-SSRSReport -SSRSServer SSRS -ReportFile Report -Overwrite 3>&1 | Should Match ".*"
         }
+
+        It "Should Ignore all Warnings" {
+
+             Mock -CommandName New-WebServiceProxy -Verifiable -MockWith {
+                $Obj = New-Object -TypeName PSObject
+                $obj | Add-Member -memberType ScriptMethod  -Name "CreateCatalogItem" -Value {
+                    Param (
+                        [String]$Type = 'Report',
+
+                        [String]$Name = 'Test',
+
+                        [String]$SSRSReportPath,
+
+                        [String]$Overwrite,
+
+                        [String]$Definition,
+
+                        [String]$Nope = $Null,
+
+                        [ref]$UploadWarnings
+                    )
+
+                    $UploadWarnings.value = "Warning" 
+                } -Force
+
+                $obj | Add-Member -memberType ScriptMethod  -Name "Dispose" -Value {
+                } -Force
+
+                Return $Obj
+            }
+
+            Upload-SSRSReport -SSRSServer SSRS -ReportFile Report -Overwrite -IgnoreWarnings 3>&1 | Should Match ".*"
+        }
+    }
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "SQLExtras : Backup-SSRSReport" {
+    # ----- Get Function Help
+    # ----- Pester to test Comment based help
+    # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+    Context "Help" {
+
+        $H = Help Backup-SSRSReport -Full
+
+        # ----- Help Tests
+        It "has Synopsis Help Section" {
+            $H.Synopsis | Should Not BeNullorEmpty
+        }
+
+        It "has Description Help Section" {
+            $H.Description | Should Not BeNullorEmpty
+        }
+
+        It "has Parameters Help Section" {
+            $H.Parameters | Should Not BeNullorEmpty
+        }
+
+        # Examples
+        it "Example - Count should be greater than 0"{
+            $H.examples.example.code.count | Should BeGreaterthan 0
+        }
+            
+        # Examples - Remarks (small description that comes with the example)
+        foreach ($Example in $H.examples.example)
+        {
+            it "Example - Remarks on $($Example.Title)"{
+                $Example.remarks | Should not BeNullOrEmpty
+            }
+        }
+
+        It "has Notes Help Section" {
+            $H.alertSet | Should Not BeNullorEmpty
+        }
+    } 
+
+    Context "Execution" {
+        
+        It "Should throw an error if connecting to SQL Server Fails" {
+            { Backup-SSRSReport -SSRSServer "SSRSServer" -Report $Report } | Should Throw
+        } 
+    }
+
+    Context "Output" {
+
+         Mock -CommandName New-WebServiceProxy -Verifiable -MockWith {
+            $Obj = New-Object -TypeName PSObject
+            
+            $Obj | Add-Member -MemberType ScriptMethod -Name "GetItemDefinition" -Value { [byte]('0x' + 'FF') }
+
+            $obj | Add-Member -memberType ScriptMethod  -Name "Dispose" -Value {
+            } -Force
+
+            Return $Obj
+        }
+
+        $Report = New-Object -TypeName PSObject -Property (@{            
+            'Name' = "TestReport"
+        })
+
+        Backup-SSRSReport -SSRSServer "SSRSServer" -Report $Report -backupLocation $Testdrive   
+
+        It "Should create a file with the backed up report" {
+            "$TestDrive\$($Report.Name).rdl" | Should Exist
+        }
+
     }
 }

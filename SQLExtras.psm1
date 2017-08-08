@@ -1199,6 +1199,9 @@ Function Upload-SSRSReport {
     .Parameter Overwrite
         When specified, an existing report will be overwritten.
 
+    .Parameter IgnoreWarnings
+        Supresses any warnings. The warnings are still written to the Verbose stream.  I included this as a way to allow automated deployments from not freaking out when they see a warning that can be ignored.
+
     .Example
         Uploads the Budget Report
 
@@ -1229,7 +1232,9 @@ Function Upload-SSRSReport {
 
         [PSCredential]$Credential,
 
-        [Switch]$Overwrite
+        [Switch]$Overwrite,
+
+        [Switch]$IgnoreWarnings
     )
 
     Begin {
@@ -1267,7 +1272,7 @@ Function Upload-SSRSReport {
                 if ( $UploadWarnings ) {
                     Foreach ( $W in $UploadWarnings ) {
                         Write-Verbose "Warning : $($W.Message)"
-                        Write-Warning "$($W.Message)"
+                        if ( -Not $IgnoreWarnings ) { Write-Warning "$($W.Message)" }
                     }
                 }
             }
@@ -1283,6 +1288,83 @@ Function Upload-SSRSReport {
         Write-Verbose "Cleaning up"
         $RS.Dispose()
     }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Backup-SSRSReport {
+    
+    <#
+        .Synopsis 
+            Backs up a SSRS Report.
+
+        .Description
+            Backs up / saves an SSRS Report file (RDL) to a folder.
+
+        .Parameter SSRSServer
+            SQL Reporting Server Name.
+
+        .Parameter Report
+            Name of the report to backup.
+
+        .Parameter BackupLocation
+            Path to copy the report backups.
+
+        .Example
+            Backup all Reports
+
+            Backup-SSRSReport -SSRSServer $SSRSServer -Report $Report -BackupLocation $BackupLocation
+
+        .Notes
+            Author : Jeff Buenting
+            Date : 2017 AUG 08
+    #>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True ) ]
+        [String]$SSRSServer,
+
+        [Parameter ( Mandatory = $True,ValueFromPipeline = $True ) ]
+        [PSObject[]]$Report,
+
+        [Parameter ( Mandatory = $True ) ]
+        [String]$BackupLocation
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+                if ( $Credential ) {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                    }
+                    else {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+                }
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.message
+                $ExceptionType = $_.Exception.GetType().FullName
+                 
+                Throw "Upload-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }
+
+    }
+
+    Process {
+        Foreach ($R in $Report) {
+            Write-verbose "Backing up report : $($R.Path) to $BackupLocation\$($R.Name).rdl"
+            $Bytes = $RS.GetItemDefinition( $R.Path )
+            [System.IO.File]::WriteAllBytes( "$BackupLocation\$($R.Name).rdl",$Bytes)
+        }
+    }
+
+    End {
+        Write-Verbose "Disconnect from SSRS Server"
+        $RS.Dispose()
+    }
+
 }
 
 #----------------------------------------------------------------------------------
@@ -1878,7 +1960,8 @@ Function Get-SQLDBMailAccount {
 
 }
 
-#----------------------------------------------------------------------------------
+
+
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
