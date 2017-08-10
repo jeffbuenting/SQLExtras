@@ -1426,8 +1426,7 @@ Function Get-SSRSReport {
                 $ExceptionType = $_.Exception.GetType().FullName
                  
                 Throw "Get-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
-        }
-        
+        }       
     }
 
     Process {
@@ -1437,6 +1436,87 @@ Function Get-SSRSReport {
         
         Write-Output ($RS.ListChildren("/", $true) | Where TypeName -eq "Report")
 
+    }
+
+    End {
+        Write-Verbose "Cleaning up"
+        $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Get-SSRSFolderSettings {
+
+<#
+    .Synopsis
+        Gets the assigned roles for each folder specified.
+
+    .Description
+         Gets the assigned roles for each folder specified.
+
+    .Parameter SSRSServer
+        The SSRS Server Name.
+
+    .Parameter RootFolder
+        Root folder 
+
+    .Parameter Credential
+        Credentials of someone with permissions to read SSRS Role Membership.
+
+    .Parameter Switch
+        if true recursively retrieve permissions for all folders and subfolders to the root.
+
+
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True ) ]
+        [String]$SSRSServer,
+
+        [Parameter ( ValueFromPipeLine = $True ) ]
+        [String]$RootFolder = '/',
+
+        [PSCredential]$Credential,
+
+        [Switch]$Recurse
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+                if ( $Credential ) {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                    }
+                    else {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+                }
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.message
+                $ExceptionType = $_.Exception.GetType().FullName
+                 
+                Throw "Get-SSRSRoleMembership : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }   
+        
+        $InheritParent = $true
+        
+    }
+
+    Process {
+        if ( $Recurse ) {
+            Write-Verbose "Getting Folder Role assignments for all subfolders starting at $RootFolder"
+            $RS.ListChildren($RootFolder, [Ref]$InheritParent) | Where type -eq "Folder" | Get-SSRSFolderSettings -SSRSServer $SSRSServer
+        }
+
+        $Users = $RS.GetPolicies( $RootFolder,[ref]$inheritParent) 
+        foreach ( $U in $Users ) {
+            $U | Add-Member -MemberType NoteProperty -Name Folder -Value $RootFolder
+            
+            Write-Output $U
+        }
     }
 
     End {
