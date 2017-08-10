@@ -12,13 +12,13 @@ Import-Module "$ModulePath\$ModuleName.PSD1" -Force -ErrorAction Stop -Scope Glo
 
 Write-Output "`n`n"
 
-Describe "SQLExtras : Upload-SSRSReport" {
+Describe "SQLExtras : Import-SSRSReport" {
     # ----- Get Function Help
     # ----- Pester to test Comment based help
     # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
     Context "Help" {
 
-        $H = Help Upload-SSRSReport -Full
+        $H = Help Import-SSRSReport -Full
 
         # ----- Help Tests
         It "has Synopsis Help Section" {
@@ -60,7 +60,7 @@ Describe "SQLExtras : Upload-SSRSReport" {
                 Return "NoServer"
             }
 
-            { Upload-SSRSReport -SSRSServer SSRS -ReportFile Report } | Should Throw
+            { Import-SSRSReport -SSRSServer SSRS -ReportFile Report } | Should Throw
         }
 
         It "Should show no warnings if no warnings exist" {
@@ -81,7 +81,7 @@ Describe "SQLExtras : Upload-SSRSReport" {
 
                         [String]$Nope = $Null,
 
-                        [ref]$UploadWarnings
+                        [ref]$ImportWarnings
                     )
 
                 } -Force
@@ -92,7 +92,7 @@ Describe "SQLExtras : Upload-SSRSReport" {
                 Return $Obj
             }
 
-            Upload-SSRSReport -SSRSServer SSRS -ReportFile Report 3>&1 | Should BENullOrEmpty
+            Import-SSRSReport -SSRSServer SSRS -ReportFile Report 3>&1 | Should BENullOrEmpty
         }
         
         It "Displays a Warning if one exists" {
@@ -113,10 +113,10 @@ Describe "SQLExtras : Upload-SSRSReport" {
 
                         [String]$Nope = $Null,
 
-                        [ref]$UploadWarnings
+                        [ref]$ImportWarnings
                     )
 
-                    $UploadWarnings.value = "Warning" 
+                    $ImportWarnings.value = "Warning" 
                 } -Force
 
                 $obj | Add-Member -memberType ScriptMethod  -Name "Dispose" -Value {
@@ -125,7 +125,7 @@ Describe "SQLExtras : Upload-SSRSReport" {
                 Return $Obj
             }
 
-            Upload-SSRSReport -SSRSServer SSRS -ReportFile Report -Overwrite 3>&1 | Should Match ".*"
+            Import-SSRSReport -SSRSServer SSRS -ReportFile Report -Overwrite 3>&1 | Should Match ".*"
         }
 
         It "Should Ignore all Warnings" {
@@ -146,10 +146,10 @@ Describe "SQLExtras : Upload-SSRSReport" {
 
                         [String]$Nope = $Null,
 
-                        [ref]$UploadWarnings
+                        [ref]$ImportWarnings
                     )
 
-                    $UploadWarnings.value = "Warning" 
+                    $ImportWarnings.value = "Warning" 
                 } -Force
 
                 $obj | Add-Member -memberType ScriptMethod  -Name "Dispose" -Value {
@@ -158,7 +158,7 @@ Describe "SQLExtras : Upload-SSRSReport" {
                 Return $Obj
             }
 
-            Upload-SSRSReport -SSRSServer SSRS -ReportFile Report -Overwrite -IgnoreWarnings 3>&1 | Should Match ".*"
+            Import-SSRSReport -SSRSServer SSRS -ReportFile Report -Overwrite -IgnoreWarnings 3>&1 | Should Match ".*"
         }
     }
 }

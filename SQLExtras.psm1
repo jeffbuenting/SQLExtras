@@ -558,7 +558,7 @@ Function Remove-SQLDatabase {
 
 #----------------------------------------------------------------------------------
 
-Function Refresh-SQLDatabase  {
+Function Repair-SQLDatabase  {
     
 <#
     .Synopsis
@@ -634,6 +634,8 @@ Function Refresh-SQLDatabase  {
     }
 
 }
+
+Set-Alias -Name Refresh-SQLDatabase -Value Repair-SQLDatabase
 
 
 #----------------------------------------------------------------------------------
@@ -1175,7 +1177,7 @@ Function Get-SQLSchedule {
 # SSRS Report Cmdlets
 #----------------------------------------------------------------------------------
 
-Function Upload-SSRSReport {
+Function Import-SSRSReport {
 
 <#
     .Synopsis
@@ -1347,7 +1349,7 @@ Function Backup-SSRSReport {
                 $ErrorMessage = $_.Exception.message
                 $ExceptionType = $_.Exception.GetType().FullName
                  
-                Throw "Upload-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+                Throw "Backup-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
         }
 
     }
