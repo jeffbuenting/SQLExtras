@@ -440,3 +440,148 @@ Describe "SQLExtras : Set-SSRSFolderSettings" {
         }
     }   
 } 
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "SQLExtras : New-SSRSFolderSettings" {
+    # ----- Get Function Help
+    # ----- Pester to test Comment based help
+    # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+    Context "Help" {
+
+        $H = Help New-SSRSFolderSettings -Full
+
+        # ----- Help Tests
+        It "has Synopsis Help Section" {
+            $H.Synopsis | Should Not BeNullorEmpty
+        }
+
+        It "has Description Help Section" {
+            $H.Description | Should Not BeNullorEmpty
+        }
+
+        It "has Parameters Help Section" {
+            $H.Parameters | Should Not BeNullorEmpty
+        }
+
+        # Examples
+        it "Example - Count should be greater than 0"{
+            $H.examples.example.code.count | Should BeGreaterthan 0
+        }
+            
+        # Examples - Remarks (small description that comes with the example)
+        foreach ($Example in $H.examples.example)
+        {
+            it "Example - Remarks on $($Example.Title)"{
+                $Example.remarks | Should not BeNullOrEmpty
+            }
+        }
+
+        It "has Notes Help Section" {
+            $H.alertSet | Should Not BeNullorEmpty
+        }
+    }
+
+    Context "Execution" {
+
+        Mock -CommandName New-WebServiceProxy -Verifiable -MockWith {
+            $Obj = New-Object -TypeName PSObject
+            $obj | Add-Member -memberType ScriptMethod  -Name "CreateCatalogItem" -Value {
+                Param (
+                    [String]$Type = 'Report',
+
+                    [String]$Name = 'Test',
+
+                    [String]$SSRSReportPath,
+
+                    [String]$Overwrite,
+
+                    [String]$Definition,
+
+                    [String]$Nope = $Null,
+
+                    [ref]$ImportWarnings
+                )
+
+            } -Force
+
+            $obj | Add-Member -memberType ScriptMethod  -Name "Dispose" -Value {
+            } -Force
+
+            $Obj | Add-Member -MemberType ScriptMethod -Name GetPolicies -Value {
+                $Pol = New-Object -TypeName PSObject -Property (@{
+                    'GroupUserName' = 'testuser'
+                    'Roles' = 'Browser','Publisher'
+                })
+            
+                Write-Output $Pol
+            } -Force
+
+            $obj | Add-Member -memberType ScriptMethod  -Name "SetPolicies" -Value {
+            } -Force
+
+            $Obj | Add-Member -MemberType ScriptMethod -Name ListChildren -value {
+                Write-Object 'Path'
+            }
+
+            Return $Obj
+        }
+       
+        It "Should throw an error if connecting to SQL Server Fails" {
+            { New-SSRSFolderSettings -SSRSServer "SSRSServer" -User $User -Role 'Browser'  } | Should Throw
+        } 
+
+        It "Should throw an error if the user already exists" {
+            { New-SSRSFolderSettings -SSRSServer "SSRSServer" -User 'testuser' -Role 'Browser'  } | Should Throw
+        }
+
+    }
+
+    Context 'Output' {
+
+        Mock -CommandName New-WebServiceProxy -Verifiable -MockWith {
+            $Obj = New-Object -TypeName PSObject
+            $obj | Add-Member -memberType ScriptMethod  -Name "CreateCatalogItem" -Value {
+                Param (
+                    [String]$Type = 'Report',
+
+                    [String]$Name = 'Test',
+
+                    [String]$SSRSReportPath,
+
+                    [String]$Overwrite,
+
+                    [String]$Definition,
+
+                    [String]$Nope = $Null,
+
+                    [ref]$ImportWarnings
+                )
+
+            } -Force
+
+            $obj | Add-Member -memberType ScriptMethod  -Name "Dispose" -Value {
+            } -Force
+
+            $Obj | Add-Member -MemberType ScriptMethod -Name GetPolicies -Value {
+                $Pol = New-Object -TypeName PSObject -Property (@{
+                    'GroupUserName' = 'testuser'
+                    'Roles' = 'Browser','Publisher'
+                })
+            
+                Write-Output $Pol
+            } -Force
+
+            $obj | Add-Member -memberType ScriptMethod  -Name "SetPolicies" -Value {
+            } -Force
+
+            $Obj | Add-Member -MemberType ScriptMethod -Name ListChildren -value {
+                Write-Object 'Path'
+            }
+
+            Return $Obj
+        }
+    }   
+} 

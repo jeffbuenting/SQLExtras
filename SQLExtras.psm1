@@ -1566,7 +1566,7 @@ Function Set-SSRSFolderSettings {
 
     .Notes
         Author : Jeff Buenting
-        Date : 2017 AUG 11
+        Date : 2017 AUI
 #>
 
     [CmdletBinding()]
@@ -1639,6 +1639,130 @@ Function Set-SSRSFolderSettings {
 
         Write-Verbose "Saving Policies"
         $RS.SetPolicies( $User.Folder, $NewPolicies )
+    }
+
+     End {
+        Write-Verbose "Cleaning up"
+        $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function New-SSRSFolderSettings {
+
+<#
+    .Synopsis
+        Creates SSRS Folder Settings
+
+    .Description
+        Creates an SSRS Folder Settings (New user role assignment).
+
+    .Parameter SSRSServer
+        The SSRS Server Name.
+
+    .Parameter User
+        Group or user object from Get-SSRSFolderSettings that needs to be changed
+
+    .Parameter Credential
+        Credentials of someone with permissions to read SSRS Role Membership.
+
+    .Parameter Role
+        Roles assigned to user for the folder.
+
+    .Parameter Folder
+        Folder to assign role.
+
+    .Example
+        $user = 'Contoso\testuser' 
+        $Roles = 'Browser','Publisher'
+
+        New-SSRSFolderSettings -SSRSServer jb-sql01.stratuslivedemo.com -User $User -Role $Roles -Verbose
+
+    .Link
+        https://www.sqlshack.com/managing-ssrs-security-using-powershell-automation-scripts/
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2017 AUG 11
+
+    
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True ) ]
+        [String]$SSRSServer,
+
+        [Parameter ( Mandatory = $True ) ]
+        [String]$User,
+
+        [String]$Folder = '/',
+
+        [Parameter ( Mandatory = $True ) ]
+        [ValidateSet ( 'Browser','Content Manager','My Reports','Publisher','Report Builder' )]
+        [string[]]$Role,
+
+        [PSCredential]$Credential
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+            if ( $Credential ) {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                }
+                else {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+            }
+        }
+        Catch {
+            $ErrorMessage = $_.Exception.message
+            $ExceptionType = $_.Exception.GetType().FullName
+                 
+            Throw "Get-SSRSRoleMembership : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }   
+        
+        $InheritParent = $true        
+    }
+    
+    Process {
+        Write-Verbose "Updating Roles for $($User)"
+        # ----- We need to grab all policies because we need to make sure we do not lose any existing.  Minus the policy we are updating
+        $Policies = $RS.GetPolicies($Folder, [ref]$InheritParent) | where GroupUserName -ne $User.GroupUserName
+
+        if ( $User -in $Policies.GroupUserName ) { Throw "New-SSRSFolderSettings : User already exists" }
+
+        $NewPolicies = @()
+        Foreach ( $P in $Policies ) {
+            $NewPolicies += $P
+        }
+        
+        # ----- Create New Policy       
+        $Policy = New-Object -TypeName "$($RS.Gettype().Namespace).Policy"
+        $Policy.GroupUserName = $User
+        $Policy.Roles = @()
+
+        # ----- Set Roles to empty.  
+        $Policy.Roles = @()
+
+        Foreach ( $R in $Role ) {
+            
+            $NewRole = New-Object -TypeName "$($RS.Gettype().Namespace).Role"
+            $NewRole.Name = $R
+            
+            if ( $NewRole -notin $Policy.Roles ) {
+                Write-Verbose "Adding $R"
+                $Policy.Roles += $NewRole
+            }
+        }
+
+        # ----- add modified policy back to entire group and save
+        $NewPolicies += $Policy
+
+        Write-Verbose "Saving Policies"
+        $RS.SetPolicies( $Folder, $NewPolicies )
     }
 
      End {
