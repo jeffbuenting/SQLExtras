@@ -281,15 +281,12 @@ Describe "SQLExtras : Get-SSRSFolderSettings" {
             $H.alertSet | Should Not BeNullorEmpty
         }
     }
- 
-    
 
     Context "Execution" {
         
         It "Should throw an error if connecting to SQL Server Fails" {
             { Get-SSRSFolderSettings -SSRSServer "SSRSServer" } | Should Throw
         } 
-
     }
 
     Context 'Output' {
@@ -338,5 +335,108 @@ Describe "SQLExtras : Get-SSRSFolderSettings" {
             Get-SSRSFolderSettings -SSRSServer Test | Should BeofType PSObject
         }
 
+    }   
+} 
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "SQLExtras : Set-SSRSFolderSettings" {
+    # ----- Get Function Help
+    # ----- Pester to test Comment based help
+    # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+    Context "Help" {
+
+        $H = Help Set-SSRSFolderSettings -Full
+
+        # ----- Help Tests
+        It "has Synopsis Help Section" {
+            $H.Synopsis | Should Not BeNullorEmpty
+        }
+
+        It "has Description Help Section" {
+            $H.Description | Should Not BeNullorEmpty
+        }
+
+        It "has Parameters Help Section" {
+            $H.Parameters | Should Not BeNullorEmpty
+        }
+
+        # Examples
+        it "Example - Count should be greater than 0"{
+            $H.examples.example.code.count | Should BeGreaterthan 0
+        }
+            
+        # Examples - Remarks (small description that comes with the example)
+        foreach ($Example in $H.examples.example)
+        {
+            it "Example - Remarks on $($Example.Title)"{
+                $Example.remarks | Should not BeNullOrEmpty
+            }
+        }
+
+        It "has Notes Help Section" {
+            $H.alertSet | Should Not BeNullorEmpty
+        }
+    }
+
+    Context "Execution" {
+
+        $User = New-Object -TypeName PSObject -Property (@{
+            'GroupUserName' = 'TestUser'
+            'Folder' = '/'
+            'Roles' = ''
+        })
+        
+        It "Should throw an error if connecting to SQL Server Fails" {
+            { Set-SSRSFolderSettings -SSRSServer "SSRSServer" -User $User -Role 'Browser'  } | Should Throw
+        } 
+    }
+
+    Context 'Output' {
+
+        Mock -CommandName New-WebServiceProxy -Verifiable -MockWith {
+            $Obj = New-Object -TypeName PSObject
+            $obj | Add-Member -memberType ScriptMethod  -Name "CreateCatalogItem" -Value {
+                Param (
+                    [String]$Type = 'Report',
+
+                    [String]$Name = 'Test',
+
+                    [String]$SSRSReportPath,
+
+                    [String]$Overwrite,
+
+                    [String]$Definition,
+
+                    [String]$Nope = $Null,
+
+                    [ref]$ImportWarnings
+                )
+
+            } -Force
+
+            $obj | Add-Member -memberType ScriptMethod  -Name "Dispose" -Value {
+            } -Force
+
+            $Obj | Add-Member -MemberType ScriptMethod -Name GetPolicies -Value {
+                $Pol = New-Object -TypeName PSObject -Property (@{
+                    'GroupUserName' = 'testuser'
+                    'Roles' = 'Browser','Publisher'
+                })
+            
+                Write-Output $Pol
+            } -Force
+
+            $obj | Add-Member -memberType ScriptMethod  -Name "SetPolicies" -Value {
+            } -Force
+
+            $Obj | Add-Member -MemberType ScriptMethod -Name ListChildren -value {
+                Write-Object 'Path'
+            }
+
+            Return $Obj
+        }
     }   
 } 

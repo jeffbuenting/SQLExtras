@@ -1464,8 +1464,20 @@ Function Get-SSRSFolderSettings {
     .Parameter Credential
         Credentials of someone with permissions to read SSRS Role Membership.
 
-    .Parameter Switch
+    .Parameter Recurse
         if true recursively retrieve permissions for all folders and subfolders to the root.
+
+    .Example
+        Retrieve the root folder (/) permissions.
+
+        Get-SSRSFolderSettings -SSRSServer $SSRSServer
+
+    .Link
+        https://stackoverflow.com/questions/32082516/get-programmatically-user-roles-and-permissions-in-ssrs-2008
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2017 AUG 11
 
 
 #>
@@ -1501,8 +1513,7 @@ Function Get-SSRSFolderSettings {
                 Throw "Get-SSRSRoleMembership : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
         }   
         
-        $InheritParent = $true
-        
+        $InheritParent = $true        
     }
 
     Process {
@@ -1520,6 +1531,117 @@ Function Get-SSRSFolderSettings {
     }
 
     End {
+        Write-Verbose "Cleaning up"
+        $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Set-SSRSFolderSettings {
+
+<#
+    .Synopsis
+        Sets SSRS Folder Settings
+
+    .Description
+        Used to set the folder permissions on an SSRS Server.
+
+    .Parameter SSRSServer
+        The SSRS Server Name.
+
+    .Parameter User
+        Group or user object from Get-SSRSFolderSettings that needs to be changed
+
+    .Parameter Credential
+        Credentials of someone with permissions to read SSRS Role Membership.
+
+    .Example
+        set user to browser and publisher
+
+        Get-SSRSFolderSettings -SSRSServer $SSRSUser -verbose | where GroupUsername -eq 'Domain\User' | Set-SSRSFolderSettings -SSRSServer $SSRSServer -Role 'Browser','Publisher'
+
+    .Link
+        https://stackoverflow.com/questions/3066869/using-powershell-to-set-user-permissions-in-reporting-services
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2017 AUG 11
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True ) ]
+        [String]$SSRSServer,
+
+        [Parameter ( ValueFromPipeLine = $True ) ]
+        [PSObject]$User,
+
+        [Parameter ( Mandatory = $True ) ]
+        [ValidateSet ( 'Browser','Content Manager','My Reports','Publisher','Report Builder' )]
+        [string[]]$Role,
+
+        [PSCredential]$Credential
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+            if ( $Credential ) {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                }
+                else {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+            }
+        }
+        Catch {
+            $ErrorMessage = $_.Exception.message
+            $ExceptionType = $_.Exception.GetType().FullName
+                 
+            Throw "Get-SSRSRoleMembership : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }   
+        
+        $InheritParent = $true        
+    }
+    
+    Process {
+        Write-Verbose "Updating Roles for $($User.GroupUserName)"
+        # ----- We need to grab all policies because we need to make sure we do not lose any existing.  Minus the policy we are updating
+        $Policies = $RS.GetPolicies($User.Folder, [ref]$InheritParent) | where GroupUserName -ne $User.GroupUserName
+
+        $NewPolicies = @()
+        Foreach ( $P in $Policies ) {
+            $NewPolicies += $P
+        }
+        
+        # ----- This is the one we are modifying
+        $Policy = $RS.GetPolicies($User.Folder, [ref]$InheritParent) | where GroupUsername -eq $User.GroupUserName | Select-Object -First 1
+
+        # ----- Set Roles to empty.  
+        $Policy.Roles = @()
+
+        Foreach ( $R in $Role ) {
+            
+            $NewRole = New-Object -TypeName "$($RS.Gettype().Namespace).Role"
+            $NewRole.Name = $R
+            
+            if ( $NewRole -notin $Policy.Roles ) {
+                Write-Verbose "Adding $R"
+                $Policy.Roles += $NewRole
+            }
+        }
+
+        
+
+        # ----- add modified policy back to entire group and save
+        $NewPolicies += $Policy
+
+        Write-Verbose "Saving Policies"
+        $RS.SetPolicies( $User.Folder, $NewPolicies )
+    }
+
+     End {
         Write-Verbose "Cleaning up"
         $RS.Dispose()
     }
