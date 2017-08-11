@@ -40,8 +40,8 @@ Download the SQLExtras.PSM1 and PSD1 files.  Copy them to your C:\Program Files
 
 ### SSRS
 
-- **Import-SSRSReport**(#Import-SSRSReport) :   Uploads an SSRS Report ( RDL File ) to SQL SSRS Server.  
-- **Get-SSRSReport** :  Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server.  
+- **Import-SSRSReport**(#import-ssrsreport) :   Uploads an SSRS Report ( RDL File ) to SQL SSRS Server.  
+- **Get-SSRSReport**(#get-ssrsreport) :  Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server.  
 
 ### Import-SSRSReport
 
@@ -56,3 +56,11 @@ Uploads an SSRS Report ( RDL File ) to SQL SSRS Server.
 - **`[Switch]`Overwrite** : When specified, an existing report will be overwritten.
 - **`[Switch]`IgnoreWarnings** : Supresses any warnings. The warnings are still written to the Verbose stream.  I included this as a way to allow automated deployments from not freaking out when they see a warning that can be ignored.
 
+### Get-SSRSReport
+
+Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server. 
+
+#### Parameters
+
+- **`[String]`SSRSServer** _(Mandatory)_ : The SSRS Server Name.  
+- **`[PSCredential]`Credential** : Credential of user who has permissions to list reports ( Browse Role ).
