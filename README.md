@@ -40,8 +40,12 @@ Download the SQLExtras.PSM1 and PSD1 files.  Copy them to your C:\Program Files
 
 ### SSRS
 
-- **Import-SSRSReport**(#import-ssrsreport) :   Uploads an SSRS Report ( RDL File ) to SQL SSRS Server.  
-- **Get-SSRSReport**(#get-ssrsreport) :  Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server.  
+- **Backup-SSRSReport**(#backup-ssrsreport) : Backs up / saves an SSRS Report file (RDL) to a folder.
+- **Import-SSRSReport**(#import-ssrsreport) : Uploads an SSRS Report ( RDL File ) to SQL SSRS Server.  
+- **Get-SSRSReport**(#get-ssrsreport) : Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server.  
+- **Get-SSRSFolderSettings**(#get-ssrsfoldersettings) : Gets the assigned roles for each folder specified.
+- **New-SSRSFolderSettings**(#new-ssrsFolderSettings) : Creates an SSRS Folder Settings (New user role assignment).
+- **Set-SSRSFolderSettings**(#set-ssrsfoldersettings) : Used to set the folder permissions on an SSRS Server.
 
 ### Import-SSRSReport
 
