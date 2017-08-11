@@ -42,10 +42,23 @@ Download the SQLExtras.PSM1 and PSD1 files.  Copy them to your C:\Program Files
 
 - **Backup-SSRSReport**(#backup-ssrsreport) : Backs up / saves an SSRS Report file (RDL) to a folder.
 - **Import-SSRSReport**(#import-ssrsreport) : Uploads an SSRS Report ( RDL File ) to SQL SSRS Server.  
-- **Get-SSRSReport**(#get-ssrsreport) : Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server.  
 - **Get-SSRSFolderSettings**(#get-ssrsfoldersettings) : Gets the assigned roles for each folder specified.
+- **Get-SSRSReport**(#get-ssrsreport) : Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server.  
 - **New-SSRSFolderSettings**(#new-ssrsFolderSettings) : Creates an SSRS Folder Settings (New user role assignment).
 - **Set-SSRSFolderSettings**(#set-ssrsfoldersettings) : Used to set the folder permissions on an SSRS Server.
+
+***
+
+###Backup-SSRSReport
+
+Backs up / saves an SSRS Report file (RDL) to a folder.
+
+#### Parameters
+
+- **`[String]`SSRSServer** _(Mandatory)_ : The SSRS Server Name.  
+- **`[FileInfo]Report** : Name of the report to backup.  Use Get-SSRSReport to obtain the object.
+- **`[String]`BackupLocation** : Path to copy the report backups
+- **`[PSCredential]`Credential** : Credential of user who has permissions to upload reports ( Pubilsh Role ).
 
 ### Import-SSRSReport
 
@@ -60,6 +73,17 @@ Uploads an SSRS Report ( RDL File ) to SQL SSRS Server.
 - **`[Switch]`Overwrite** : When specified, an existing report will be overwritten.
 - **`[Switch]`IgnoreWarnings** : Supresses any warnings. The warnings are still written to the Verbose stream.  I included this as a way to allow automated deployments from not freaking out when they see a warning that can be ignored.
 
+### Get-SSRSFolderSettings 
+
+Gets the assigned roles for each folder specified.
+
+#### Parameters
+
+- **`[String]`$SSRSServer** _(Mandatory)_ : The SSRS Server Name.
+- **`[String]`$RootFolder** : Root folder to start getting reports.  Defaults to /.
+- **`[PSCredential]`Credential** : Credential of user who has permissions to upload reports ( Pubilsh Role ).
+- **`[Switch]`$Recurse** : if true recursively retrieve permissions for all folders and subfolders to the root.
+
 ### Get-SSRSReport
 
 Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server. 
@@ -68,3 +92,27 @@ Gets a list of SSRS Reports ( RDL File ) on the SQL SSRS Server.
 
 - **`[String]`SSRSServer** _(Mandatory)_ : The SSRS Server Name.  
 - **`[PSCredential]`Credential** : Credential of user who has permissions to list reports ( Browse Role ).
+
+### New-SSRSFolderSettings
+
+Creates an SSRS Folder Settings (New user role assignment).
+
+#### Parameters
+
+- **`[String]`$SSRSServer** _(Mandatory)_ : The SSRS Server Name.
+- **`[String]`$USer** : Group Name or User Name to add to folder Settings.
+- **`[String[]]`$Role** : Array containing the roles to be assigned to user.
+- **`[String]`Folder** : Folder path where the assignments should be applied.  Defaults to the root path /.
+- **`[PSCredential]`Credential** : Credential of user who has permissions to upload reports ( Content Manager Role ).
+
+###Set-SSRSFolderSettings
+
+Used to set the folder permissions on an SSRS Server.
+
+#### Parameters
+
+- **`[String]`$SSRSServer** _(Mandatory)_ : The SSRS Server Name.
+- **`[String]`$USer** : Group Name or User Name to add to folder Settings.
+- **`[String[]]`$Role** : Array containing the roles to be assigned to user.
+- **`[String]`Folder** : Folder path where the assignments should be applied.
+- **`[PSCredential]`Credential** : Credential of user who has permissions to upload reports ( Content Manager Role ).

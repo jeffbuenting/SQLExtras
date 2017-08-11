@@ -1307,14 +1307,18 @@ Function Backup-SSRSReport {
             SQL Reporting Server Name.
 
         .Parameter Report
-            Name of the report to backup.
+            Name of the report to backup.  Use Get-SSRSReport to obtain the object.
 
         .Parameter BackupLocation
             Path to copy the report backups.
 
+        .Parameter Credential
+            Credential of user who has permissions to upload reports ( Browse Role ).
+
         .Example
             Backup all Reports
 
+            $Report = Get-SSRSReport -SSRSServer $SSRSServer 
             Backup-SSRSReport -SSRSServer $SSRSServer -Report $Report -BackupLocation $BackupLocation
 
         .Notes
@@ -1331,7 +1335,9 @@ Function Backup-SSRSReport {
         [PSObject[]]$Report,
 
         [Parameter ( Mandatory = $True ) ]
-        [String]$BackupLocation
+        [String]$BackupLocation,
+
+        [PSCredential]$Credential
     )
 
     Begin {
