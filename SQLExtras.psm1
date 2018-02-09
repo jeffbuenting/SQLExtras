@@ -1559,6 +1559,9 @@ Function Set-SSRSFolderSettings {
     .Parameter User
         Group or user object from Get-SSRSFolderSettings that needs to be changed
 
+    .parameter Role
+        Array containing the roles to be assigned to user.
+
     .Parameter Credential
         Credentials of someone with permissions to read SSRS Role Membership.
 
@@ -1776,6 +1779,136 @@ Function New-SSRSFolderSettings {
         $RS.Dispose()
     }
 }
+
+#----------------------------------------------------------------------------------
+
+Function Get-SSRSReportDataSource {
+
+<#
+    .Synopsis
+        Gets a reports RDS data source configuration 
+
+    .Link
+        Main body of script obtained from this linke:
+
+    https://www.mssqltips.com/sqlservertip/4429/sql-server-reporting-services-data-source-deployment-automation-with-powershell/
+#>
+
+
+    [CmdletBinding()]
+    Param(
+        [Parameter (Mandatory = $True)]
+        [String]$SSRSServer,
+
+        [Parameter (Mandatory = $True,ValueFromPipeline = $True)]
+        [PSObject]$Report,
+
+        [PSCredential]$Credential
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+                if ( $Credential ) {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                    }
+                    else {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+                }
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.message
+                $ExceptionType = $_.Exception.GetType().FullName
+                 
+                Throw "Get-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }       
+    }
+
+    Process {
+        foreach ( $R in $Report ) {
+            Write-Verbose "Getting Data source for $($R.Name)"
+
+            Write-output ($RS.GetItemDataSources( $R.path ))
+        }
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Set-SSRSReportDataSource {
+
+<#
+    .Synopsis
+        Makes changes to a Report Data Source.
+
+    .Link
+        Main body of script obtained from this linke:
+
+        https://stackoverflow.com/questions/9178685/change-datasource-of-ssrs-report-with-powershell
+
+    .Link
+        CredentialRetrieval
+
+        https://msdn.microsoft.com/en-us/library/reportservice2010.datasourcedefinition.credentialretrieval.aspx
+#>
+
+
+    [CmdletBinding()]
+    Param(
+        [Parameter (Mandatory = $True)]
+        [String]$SSRSServer,
+
+        # ----- TODO: is it possible to pass two parameters via pipeling?  if so is this something we want to do?
+
+        [Parameter (Mandatory = $True)]
+        [PSObject]$Report,
+
+        [Parameter (Mandatory = $True)]
+        [PSObject]$DataSource,
+
+        [PSCredential]$DSCredential,
+
+        [PSCredential]$Credential
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+                if ( $Credential ) {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                    }
+                    else {
+                        $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+                }
+            }
+            Catch {
+                $ErrorMessage = $_.Exception.message
+                $ExceptionType = $_.Exception.GetType().FullName
+                 
+                Throw "Get-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }       
+    }
+
+    Process {
+        
+        Write-Verbose "Setting Data Source"
+
+        if ( $DSCredential ) {
+            Write-Verbose "Updating Data Source username/password"
+
+            $DataSource.Item.CredentialRetrieval = 'Store'
+            $DataSource.Item.UserName = $DSCredential.UserName
+            $DataSource.Item.Password = $DSCredential.GetNetworkCredential().Password
+        }
+
+        $RS.SetItemDataSources($Report.Path,$DataSource)
+     
+    }
+}
+
+
 
 #----------------------------------------------------------------------------------
 # SQL Configuration Cmdlets
