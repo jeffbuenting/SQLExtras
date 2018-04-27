@@ -1,6 +1,7 @@
 ﻿$SLConfigs= '\\vaslnas\Deploys\SLConfigs'
 
 $instance = "MSSQLSERVER"
+$SQLServer = 'JB-SQL01'
 
 # ----- add to the PSModule Path so we can load the SQLServer Module
 $env:PSModulePath += ";$SLConfigs\Powershell\Modules"
@@ -9,7 +10,7 @@ Import-Module SQLServer
 
 
 # ----- different servers have different  file locations ( yeah, I know ).  Restoring to the default location of the specific server
-$DefaultLocation = Invoke-Sqlcmd -Query "select SERVERPROPERTY('instancedefaultdatapath') AS [DefaultFile], SERVERPROPERTY('instancedefaultlogpath') AS [DefaultLog]"
+$DefaultLocation = Invoke-Sqlcmd -ServerInstance $SQLServer -Query "select SERVERPROPERTY('instancedefaultdatapath') AS [DefaultFile], SERVERPROPERTY('instancedefaultlogpath') AS [DefaultLog]"
 
 # ----- This query will create the WGP_importProcessor DB. 
 $Query = @"
@@ -24,6 +25,9 @@ CREATE DATABASE [WGP_importProcessor]
  LOG ON 
 ( NAME = N'WPG_importProcessor_log', FILENAME = N'$($DefaultLocation.DefaultLog)WPG_importProcessor_log.ldf' , SIZE = 478464KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)
 GO
+"@
+
+$ONe = @"
 ALTER DATABASE [WGP_importProcessor] SET COMPATIBILITY_LEVEL = 110
 GO
 IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
@@ -197,15 +201,20 @@ ALTER DATABASE [WGP_importProcessor] SET  READ_WRITE
 GO
 "@
 
+$SetFileStreamQuery = @"
+    EXEC sp_configure filestream_access_level, 2
+    RECONFIGURE
+"@
 
 
 # ----- Determine the path version number.  Assuming we will be working with the highest version installed.
-$SQLVersionNum = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | where Displayname -like "SQL*Database Engine*" | Sort-Object VersionMajor | Select-object -ExpandProperty VersionMajor -First 1
-
+$SQLVersionNum = invoke-Command -Computername $SQLServer -ScriptBlock {
+    Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | where Displayname -like "SQL*Database Engine*" | Sort-Object VersionMajor | Select-object -ExpandProperty VersionMajor -First 1
+}
 
 # ----- https://haydenhancock.wordpress.com/2013/03/12/enable-filestream-via-powershell/
 # ----- Check if FileStream is enabled
-$FileStream = Get-WmiObject -Namespace "ROOT\Microsoft\SqlServer\ComputerManagement$SQLVersionNum" -Class FilestreamSettings | where {$_.InstanceName -eq $instance}
+$FileStream = Get-WmiObject -ComputerName $SQLServer -Namespace "ROOT\Microsoft\SqlServer\ComputerManagement$SQLVersionNum" -Class FilestreamSettings | where {$_.InstanceName -eq $instance}
 
 <# 
     AccessLevel
@@ -220,16 +229,19 @@ if ( $FileStream.AccessLevel -ne 3 ) {
     Write-output "Enabling FileStream on SQL"
     $FileStream.EnableFileStream(3,'WGP_FileStream' )
 
-    Invoke-Sqlcmd "EXEC sp_configure filestream_access_level, 2"
-    Invoke-Sqlcmd "RECONFIGURE"
+    Invoke-Sqlcmd -ServerInstance $SQLServer -Query $SetFileStreamQuery
 
     Write-output "Restarting the SQL Service"
-    Get-Service -Name $Instance | Restart-Service -Force
+    Get-Service -ComputerName $SQLServer -Name $Instance | Restart-Service -Force 
+
+    # ----- pause to give SQL some time to completley start.
+    Start-Sleep -Seconds 10
+    
 }
 
-if ( -Not (Get-SQLDatabase -Name WGP_importProcessor -path "SQLSERVER:\SQL\$($env:ComputerName)\default" -ErrorAction SilentlyContinue) ) {
+if ( -Not (Get-SQLDatabase -serverInstance $SQLServer -Name WGP_importProcessor -ErrorAction SilentlyContinue) ) {
     Write-Output "WGP_importProcessor doesn't exist.  Create it"
-    Invoke-Sqlcmd -Query $Query
+    Invoke-Sqlcmd -ServerInstance $SQLServer -Query $Query
 }
 
 

@@ -926,6 +926,17 @@ Function New-SQLSchedule {
 
         When SQL Agent Starts Unused
 
+     .Parameter FreqSubType 
+        Specifies the units for freq_subday_interval. freq_subday_typeis int, with a default of 0, and can be one of these values. 
+            
+        Value            Description (unit)
+        0x1              At the specified time
+        0x2              Seconds
+        0x4              Minutes
+        0x8              Hours
+
+    .Parameter FreqSubInterval
+        The number of freq_subday_type periods to occur between each execution of a job. freq_subday_intervalis int, with a default of 0. Note: Interval should be longer than 10 seconds. freq_subday_interval is ignored in those cases where freq_subday_type is equal to 1. 
 
     .Link
         https://msdn.microsoft.com/en-us/library/cc645912.aspx
@@ -948,6 +959,11 @@ Function New-SQLSchedule {
         [String]$Frequency = 'Once',
 
         [Int]$FreqInterval = 1,
+
+        [ValidateSet('At the specified time','Seconds','Minutes','Hours')]
+        [String]$FreqSubType = 'At the specified time',
+
+        [Int]$FreqSubInterval = 0,
 
         [int]$FreqRecurranceFactor,
 
@@ -980,6 +996,8 @@ Function New-SQLSchedule {
             }
         }
 
+        $FreqSubTypeArray = 'At the specified time','Seconds','Minutes','Hours'
+
         # ----- Creates the SQL Query to build the SQL Job Schedule
         $SP_Add_Schedule = "USE msdb ;
 
@@ -988,8 +1006,8 @@ Function New-SQLSchedule {
                 @enabled = 1,
                 @freq_type = $([Math]::pow(2,$FreqArray.IndexOf( $Frequency ))),
                 @freq_interval = $FreqInterval,
-                @freq_subday_type = 1,
-                @freq_subday_interval = 0,
+                @freq_subday_type = $([Math]::pow(2,$FreqSubTypeArray.IndexOf( $FreqSubType ))),
+                @freq_subday_interval = $FreqSubInterval,
                 @freq_relative_interval = 0,
                 @freq_recurrence_factor = $FreqRecurranceFactor,
                 @active_start_date = 20150120,

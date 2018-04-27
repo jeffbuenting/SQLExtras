@@ -26,7 +26,8 @@ $BULocation = "\\vaslnas.stratuslivedemo.com\SL_SQL_Backups"
 
 #$SQLServer = $env:COMPUTERNAME
 # ----- Choose a SQL server from the list
-$SQLServer = get-adcomputer -Filter "Name -like '*sql*'" | Select-Object Name,DNSHostName | Out-GridView -OutputMode Single -Title 'Select a SQL Server' | Select-Object -ExpandProperty DNSHostName
+#$SQLServer = get-adcomputer -Filter "Name -like '*sql*'" | Select-Object Name,DNSHostName | Out-GridView -OutputMode Single -Title 'Select a SQL Server' | Select-Object -ExpandProperty DNSHostName
+$SQLServer = 'QA3SQL'
 if ( -Not $SQLServer ) { Throw "SQLServer cannot be Null.  Rerun and select one SQL Server" }
 
 $NotAutomaticallyDeleted = [bool]('False','True' | Out-GridView -OutputMode Single -Title 'Prevent scheduled scavenging of the backup' )

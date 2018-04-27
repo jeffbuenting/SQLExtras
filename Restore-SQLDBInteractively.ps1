@@ -1,4 +1,4 @@
-﻿$BackupRoot = '\\VASLNAS\SL_SQL_Backups'
+﻿$BackupRoot = '\\sl-jeffb\h$\wgpqa1_backup'
 $SQLServer = 'WGPQA1-SQL'
 $TempDrive = "c:\Temp"
 
