@@ -6,7 +6,7 @@ Powershell SQL Cmdlets and SQL Scripts wrapped in a SQLExtras module
 
 ### Master
 
-Version: 3.0
+Version: 4.1
 
 This is the branch containing the latest version.
 
