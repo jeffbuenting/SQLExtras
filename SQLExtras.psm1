@@ -1761,7 +1761,10 @@ Function New-SSRSFolderSettings {
         # ----- We need to grab all policies because we need to make sure we do not lose any existing.  Minus the policy we are updating
         $Policies = $RS.GetPolicies($Folder, [ref]$InheritParent) | where GroupUserName -ne $User.GroupUserName
 
-        if ( $User -in $Policies.GroupUserName ) { Throw "New-SSRSFolderSettings : User already exists" }
+        if ( $User -in $Policies.GroupUserName ) { 
+            Write-Warning "New-SSRSFolderSettings : User already exists"
+            break
+        }
 
         $NewPolicies = @()
         Foreach ( $P in $Policies ) {
