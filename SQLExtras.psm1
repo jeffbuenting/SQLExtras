@@ -1546,7 +1546,9 @@ Function Get-SSRSFolderSettings {
             $RS.ListChildren($RootFolder, [Ref]$InheritParent) | Where type -eq "Folder" | Get-SSRSFolderSettings -SSRSServer $SSRSServer
         }
 
-        $Users = $RS.GetPolicies( $RootFolder,[ref]$inheritParent) 
+        #$Users = $RS.GetPolicies( $RootFolder,[ref]$inheritParent) 
+        $Users = $RS.GetPolicies( $RootFolder,$inheritParent)
+
         foreach ( $U in $Users ) {
             $U | Add-Member -MemberType NoteProperty -Name Folder -Value $RootFolder
             
@@ -1616,7 +1618,7 @@ Function Set-SSRSFolderSettings {
         $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
         Try {
             if ( $Credential ) {
-                    $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop 
                 }
                 else {
                     $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
@@ -1626,7 +1628,7 @@ Function Set-SSRSFolderSettings {
             $ErrorMessage = $_.Exception.message
             $ExceptionType = $_.Exception.GetType().FullName
                  
-            Throw "Get-SSRSRoleMembership : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+            Throw "Set-SSRSRoleMembership : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
         }   
         
         $InheritParent = $true        
@@ -1797,6 +1799,176 @@ Function New-SSRSFolderSettings {
         $RS.Dispose()
     }
 }
+
+#----------------------------------------------------------------------------------
+
+Function Get-SSRSSitePermissions {
+
+<#
+    .Synopsis
+        Gets a list of the SSRS site permissions
+
+    .Description
+        Retrieves a list of Site wide permissions for an SSRS Server.
+
+    .Parameter SSRSServer
+        Name of the SSRS Server
+
+    .Parameter Credential
+        User with permissions to retrieve site permissions
+
+    .Example
+        Retrieve list of site users
+
+        Get-SSRSSitePermissions -SSRSServer ServerA
+
+    .Link
+        https://msdn.microsoft.com/en-us/library/reportservice2010.reportingservice2010.aspx
+        https://www.ddls.com.au/blog/automatically-maintaining-sql-server-reporting-services-folder-permissions-using-powershell/
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2018 MAY 15
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True ) ]
+        [String]$SSRSServer,
+        
+        [PSCredential]$Credential
+    )
+
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+            if ( $Credential ) {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                }
+                else {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+            }
+        }
+        Catch {
+            $ErrorMessage = $_.Exception.message
+            $ExceptionType = $_.Exception.GetType().FullName
+                 
+            Throw "Get-SSRSSitePermissions : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        }   
+    }
+
+    Process {
+        Write-Output ($RS.GetSystemPolicies())
+    }
+
+    End {
+        Write-Verbose "Cleaning up"
+        $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Add-SSRSSitePermissions {
+
+<#
+    .Synopsys
+        Adds a user to the SSRS Site wide system permissions
+
+    .Description
+        Adds permissions to a user for SSRS Site wide Roles
+
+    .Parameter SSRSServer
+        SSRS Server name
+
+    .Parameter User
+        User name to add permissions
+
+    .Parameter Role
+        Site Roles to add for the User
+
+    .Parameter Credential
+        User who has permissions to add user to site roles
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True ) ]
+        [String]$SSRSServer,
+
+        [Parameter ( Mandatory = $True ) ]
+        [String]$User,
+
+        [Parameter ( Mandatory = $True ) ]
+        [ValidateSet ('System Administrator','System User') ]
+        [String[]]$Role,
+        
+        [PSCredential]$Credential
+    )
+    
+    Begin {
+        Write-Verbose "Connecting to $SSRSServer"
+        $reportServerUri = "http://$SSRSServer/ReportServer/ReportService2010.asmx"
+        Try {
+            if ( $Credential ) {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -Credential $Credential -ErrorAction Stop
+                }
+                else {
+                    $RS = New-WebServiceProxy -Uri $reportServerUri -UseDefaultCredential -ErrorAction Stop
+            }
+        }
+        Catch {
+            $ErrorMessage = $_.Exception.message
+            $ExceptionType = $_.Exception.GetType().FullName
+                 
+            Throw "Get-SSRSSitePermissions : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+        } 
+    }
+
+    Process {
+
+        Write-Verbose "Get existing system policies"
+        $Policies = $RS.GetSystemPolicies()
+
+        if ( $User -in $Policies.GroupUserName ) { Throw "Add-SSRSSitePermissions : User already exists" }
+
+        $NewPolicies = @()
+        Foreach ( $P in $Policies ) {
+            $NewPolicies += $P
+        }
+        
+        # ----- Create New Policy       
+        $Policy = New-Object -TypeName "$($RS.Gettype().Namespace).Policy"
+        $Policy.GroupUserName = $User
+        # ----- Set Roles to empty.
+        $Policy.Roles = @()
+        
+        Foreach ( $R in $Role ) {
+            
+            $NewRole = New-Object -TypeName "$($RS.Gettype().Namespace).Role"
+            $NewRole.Name = $R
+            
+            if ( $NewRole -notin $Policy.Roles ) {
+                Write-Verbose "Adding $R"
+                $Policy.Roles += $NewRole
+            }
+        }
+
+        # ----- add modified policy back to entire group and save
+        $NewPolicies += $Policy
+
+        Write-Verbose "Saving Policies"
+        $RS.SetSystemPolicies( $NewPolicies )
+    }
+
+     End {
+        Write-Verbose "Cleaning up"
+        $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------------
 
