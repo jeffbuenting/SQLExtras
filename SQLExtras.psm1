@@ -405,7 +405,7 @@ Function Set-SQLDBLoginRoles {
 
         [String]$Login,
 
-        [ValidateSet('db_accessadmin','db_backupoperator','db_datareader','db_datawriter','db_ddladmin','db_denydatareader','db_denydatawriter','db_owner','db_securityadmin')]
+        [ValidateSet('db_accessadmin','db_backupoperator','db_datareader','db_datawriter','db_ddladmin','db_denydatareader','db_denydatawriter','db_owner','db_securityadmin','RSExecRole','SQLAgentOperatorRole','SQLAgentReaderRole','SQLAgentUserRole')]
         [String[]]$DBRole
     )
 
@@ -1968,6 +1968,157 @@ Function Add-SSRSSitePermissions {
      End {
         Write-Verbose "Cleaning up"
         $RS.Dispose()
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Set-SQLPermission {
+
+<#
+    .Synopsis
+        sets the securables permissions on a SQL Login.
+
+    .Description 
+        Grants, Denys or revokes SQL login Securable Permissions.
+
+    .Parameter ServerInstance
+        Instance name of the sql server
+
+    .Parameter Login
+        SQL login you want to modify
+
+    .Parameter Permission
+        List of the permission you want to modify for the login
+
+    .Parameter Action
+        Action to set for the permission
+
+    .Example
+        Set the connect to sql permission for the login User1
+
+        Set-SQLPermission -ServerInstance ServerA -Login User1 -Permission connectsql -Action Grant
+        
+    .Link
+        https://stackoverflow.com/questions/21013909/how-to-use-powershell-to-modify-sql-login-permission
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2018 May 31
+    
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$ServerInstance="localhost",
+
+        [Parameter (Mandatory = $True,ValueFromPipeline = $True)]
+        [String]$Login,
+
+        [Parameter (Mandatory = $True)]
+        [ValidateSet ( 'AdministerBulkOperations','AlterAnyConnection','AlterAnyCredential','AlterAnyDatabase','AlterAnyEndpoint','AlterAnyEventNotification','AlterAnyLinkedServer','AlterAnyLogin','AlterAnyServerAudit','AlterResources','AlterServerState','AlterSettings','AlterTrace','AuthenticateServer','ConnectSql','ControlServer','CreateAnyDatabase','CreateDdlEventNotification','CreateEndpoint','CreateTraceEventNotification','ExternalAccessAssembly','UnsafeAssembly','ViewAnyDatabase','ViewAnyDefinition','ViewServerState' )]
+        [String[]]$Permission,
+
+        [Parameter (Mandatory = $True)]
+        [ValidateSet ( 'Grant','Deny','Revoke' )]
+        [String]$Action
+    )
+
+    Begin {
+        # ----- Establish Connection to SQL Server
+        $server = new-object ("Microsoft.SqlServer.Management.SMO.Server") $ServerInstance
+    }
+
+    Process {
+        $perm = new-object ('Microsoft.SqlServer.Management.Smo.ServerPermissionSet')
+
+        Foreach ( $P in $Permission ) {
+            Write-Verbose "Setting $Permission"
+            $Perm.$($Permission) = $True
+        }
+
+        switch ($action) { 
+            'Grant'  { 
+                Write-Verbose "     To Grant"
+                $server.Grant($perm,$Login) 
+            }
+            'Deny'   { 
+                Write-Verbose "     To Deny"
+                $server.Deny($perm,$Login) 
+            }
+            'Revoke' { 
+                Write-Verbose "     To Revoke"
+                $server.Revoke($perm,$Login) 
+            }
+        }
+
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Get-SQLPermission {
+
+<#
+    .Synopsis
+        Retrieves a list of Securable Permissions for a SQL Login.
+
+    .Description
+        Retrieves a list of Sever permissions for a SQL login
+
+    .Parameter ServerInstance
+        Instance name of the sql server
+
+    .Parameter Login
+        login whose permissions you want.
+
+        If left blank then all logins are returned.
+
+    .Example
+        Return all login permissions
+            
+        Get-SQLPermission -ServerInstance ServerA
+
+    .Example
+        Return login permissions for the login user1
+
+        Get-SQLPermission -ServerInstance ServerA -Login User1
+
+    .Link
+        https://docs.microsoft.com/en-us/sql/relational-databases/server-management-objects-smo/tasks/granting-revoking-and-denying-permissions?view=sql-server-2017
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2018 MAY 31
+
+#>
+
+    [CmdletBinding()]
+    Param(
+        [String]$ServerInstance="localhost",
+
+        [Parameter (ValueFromPipeline = $True)]
+        [String[]]$Login
+    )
+
+    Begin {
+        # ----- Establish Connection to SQL Server
+        $server = new-object ("Microsoft.SqlServer.Management.SMO.Server") $ServerInstance
+    }
+
+    Process {
+        if ( $Login ) {
+            foreach ( $L in $Login ) {
+                Write-Verbose "Returning permissions for $L"
+
+                Write-Output $Server.EnumServerPermissions( $L )
+            }
+        }
+        Else {
+            Write-Verbose "Returning all Login permissions"
+
+            Write-Output $Server.EnumServerPermissions()
+        }
     }
 }
 
