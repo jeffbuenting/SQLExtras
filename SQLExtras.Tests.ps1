@@ -1,5 +1,7 @@
 ﻿# ----- Get the module name
-$ModulePath = 'F:\GitHub\SQLExtras'
+if ( -Not $PSScriptRoot ) { $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }
+ 
+$ModulePath = $PSScriptRoot
 
 $ModuleName = $ModulePath | Split-Path -Leaf
 
