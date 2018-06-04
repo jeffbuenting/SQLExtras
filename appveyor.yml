@@ -5,8 +5,15 @@
 skip_commits:
   message: /updated readme.*/
 
+# branches to build
+branches:
+  # whitelist
+  only:
+    - master
+
 install:
   - cinst pester -y
+  -ps: install-module sqlserver
 
 build: false
 
