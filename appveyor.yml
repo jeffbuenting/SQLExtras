@@ -13,7 +13,7 @@ branches:
 
 install:
   - cinst pester -y
-  -ps: install-module sqlserver
+  - ps: install-module sqlserver
 
 build: false
 
