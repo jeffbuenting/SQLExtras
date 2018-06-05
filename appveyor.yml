@@ -45,6 +45,6 @@ on_success:
   - git checkout master
   - git add --all
   - git status
-  - git commit -s -m "Update version to $env:APPVEYOR_BUILD_VERSION"
+  - git commit -s -m "updated readme.*"
   - git push origin master
   
