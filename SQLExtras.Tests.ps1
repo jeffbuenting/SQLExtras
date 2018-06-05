@@ -1,4 +1,6 @@
 ﻿# ----- Get the module name
+if ( -Not $PSScriptRoot ) { $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }
+
 $ModulePath = $PSScriptRoot
 
 $ModuleName = $ModulePath | Split-Path -Leaf
