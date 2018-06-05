@@ -3,10 +3,6 @@ if ( -Not $PSScriptRoot ) { $PSScriptRoot = Split-Path $MyInvocation.MyCommand.P
 
 $ModulePath = $PSScriptRoot
 
-Write-output "ModulePath = $ModulePath"
-
-Get-module -ListAvailable
-
 $ModuleName = $ModulePath | Split-Path -Leaf
 
 # ----- Remove and then import the module.  This is so any new changes are imported.
