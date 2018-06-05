@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="42" errors="0" failures="6" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2018-06-04" time="13:44:35">
+  <environment user="Jeff.Buenting" machine-name="SL-JEFFB" cwd="F:\GitHub\SQLExtras" user-domain="STRATUSLIVEDEMO" platform="Microsoft Windows 10 Enterprise|C:\WINDOWS|\Device\Harddisk0\Partition1" nunit-version="2.5.8.0" os-version="10.0.16299" clr-version="4.0.30319.42000" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="PowerShell" name="Pester" executed="True" result="Failure" success="False" time="35.3824" asserts="0">
+    <results>
+      <test-suite type="TestFixture" name="SQLExtras : Module Tests" executed="True" result="Failure" success="False" time="0.4266" asserts="0" description="SQLExtras : Module Tests">
+        <results>
+          <test-case description="should have a test for each function" name="SQLExtras : Module Tests.should have a test for each function" time="0.4266" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Expected: value to be empty but it was {@{InputObject=Refresh-SQLDatabase}}</message>
+              <stack-trace>at line: 27 in F:\GitHub\SQLExtras\SQLExtras.Tests.ps1
+27:         Compare-Object $moduleCommandNames $testNames | where { $_.SideIndicator -eq '&lt;=' } | select inputobject | should beNullOrEmpty
+</stack-trace>
+            </failure>
+          </test-case>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="SQLExtras : Import-SSRSReport" executed="True" result="Failure" success="False" time="3.0639" asserts="0" description="SQLExtras : Import-SSRSReport">
+        <results>
+          <test-case description="has Synopsis Help Section" name="SQLExtras : Import-SSRSReport.has Synopsis Help Section" time="0.2242" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Description Help Section" name="SQLExtras : Import-SSRSReport.has Description Help Section" time="0.0364" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Parameters Help Section" name="SQLExtras : Import-SSRSReport.has Parameters Help Section" time="0.0195" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Import-SSRSReport.Example - Count should be greater than 0" time="0.0277" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Import-SSRSReport.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.03" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Notes Help Section" name="SQLExtras : Import-SSRSReport.has Notes Help Section" time="0.0159" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should throw an error if the connection to the SSRS server fails" name="SQLExtras : Import-SSRSReport.Should throw an error if the connection to the SSRS server fails" time="2.5231" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should show no warnings if no warnings exist" name="SQLExtras : Import-SSRSReport.Should show no warnings if no warnings exist" time="0.0595" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Upload-SSRSReports : Error Connecting to SSRS SSRS
+
+     There was an error downloading 'http://ssrs/ReportServer/ReportService2010.asmx'.
+
+     System.Net.WebException</message>
+              <stack-trace>at line: 1428 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
+            </failure>
+          </test-case>
+          <test-case description="Displays a Warning if one exists" name="SQLExtras : Import-SSRSReport.Displays a Warning if one exists" time="0.0734" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Upload-SSRSReports : Error Connecting to SSRS SSRS
+
+     There was an error downloading 'http://ssrs/ReportServer/ReportService2010.asmx'.
+
+     System.Net.WebException</message>
+              <stack-trace>at line: 1428 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
+            </failure>
+          </test-case>
+          <test-case description="Should Ignore all Warnings" name="SQLExtras : Import-SSRSReport.Should Ignore all Warnings" time="0.0542" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Upload-SSRSReports : Error Connecting to SSRS SSRS
+
+     There was an error downloading 'http://ssrs/ReportServer/ReportService2010.asmx'.
+
+     System.Net.WebException</message>
+              <stack-trace>at line: 1428 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
+            </failure>
+          </test-case>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="SQLExtras : Backup-SSRSReport" executed="True" result="Failure" success="False" time="2.8106" asserts="0" description="SQLExtras : Backup-SSRSReport">
+        <results>
+          <test-case description="has Synopsis Help Section" name="SQLExtras : Backup-SSRSReport.has Synopsis Help Section" time="0.1394" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Description Help Section" name="SQLExtras : Backup-SSRSReport.has Description Help Section" time="0.0212" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Parameters Help Section" name="SQLExtras : Backup-SSRSReport.has Parameters Help Section" time="0.0228" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Backup-SSRSReport.Example - Count should be greater than 0" time="0.023" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Backup-SSRSReport.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0196" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Notes Help Section" name="SQLExtras : Backup-SSRSReport.has Notes Help Section" time="0.0191" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : Backup-SSRSReport.Should throw an error if connecting to SQL Server Fails" time="0.0782" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Error occurred in Context block" name="SQLExtras : Backup-SSRSReport.Error occurred in Context block" time="2.4872" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Backup-SSRSReports : Error Connecting to SSRS SSRSServer
+
+     There was an error downloading 'http://ssrsserver/ReportServer/ReportService2010.asmx'.
+
+     System.Net.WebException</message>
+              <stack-trace>At F:\GitHub\SQLExtras\sqlextras.psm1:1529 char:17</stack-trace>
+            </failure>
+          </test-case>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="SQLExtras : Get-SSRSFolderSettings" executed="True" result="Failure" success="False" time="23.7521" asserts="0" description="SQLExtras : Get-SSRSFolderSettings">
+        <results>
+          <test-case description="has Synopsis Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Synopsis Help Section" time="0.1438" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Description Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Description Help Section" time="0.0258" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Parameters Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Parameters Help Section" time="0.0145" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Get-SSRSFolderSettings.Example - Count should be greater than 0" time="0.0288" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Get-SSRSFolderSettings.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0183" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Notes Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Notes Help Section" time="0.0152" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : Get-SSRSFolderSettings.Should throw an error if connecting to SQL Server Fails" time="2.3746" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should return a custom object" name="SQLExtras : Get-SSRSFolderSettings.Should return a custom object" time="21.1311" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Get-SSRSRoleMembership : Error Connecting to SSRS Test
+
+     There was an error downloading 'http://test/ReportServer/ReportService2010.asmx'.
+
+     System.Net.WebException</message>
+              <stack-trace>at line: 1690 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
+            </failure>
+          </test-case>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="SQLExtras : Set-SSRSFolderSettings" executed="True" result="Success" success="True" time="2.6717" asserts="0" description="SQLExtras : Set-SSRSFolderSettings">
+        <results>
+          <test-case description="has Synopsis Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Synopsis Help Section" time="0.1389" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Description Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Description Help Section" time="0.0211" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Parameters Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Parameters Help Section" time="0.0274" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Set-SSRSFolderSettings.Example - Count should be greater than 0" time="0.0132" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Set-SSRSFolderSettings.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0318" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Notes Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Notes Help Section" time="0.0186" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : Set-SSRSFolderSettings.Should throw an error if connecting to SQL Server Fails" time="2.4207" asserts="0" success="True" result="Success" executed="True" />
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="SQLExtras : New-SSRSFolderSettings" executed="True" result="Success" success="True" time="2.6575" asserts="0" description="SQLExtras : New-SSRSFolderSettings">
+        <results>
+          <test-case description="has Synopsis Help Section" name="SQLExtras : New-SSRSFolderSettings.has Synopsis Help Section" time="0.1744" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Description Help Section" name="SQLExtras : New-SSRSFolderSettings.has Description Help Section" time="0.0149" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Parameters Help Section" name="SQLExtras : New-SSRSFolderSettings.has Parameters Help Section" time="0.014" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Count should be greater than 0" name="SQLExtras : New-SSRSFolderSettings.Example - Count should be greater than 0" time="0.0173" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : New-SSRSFolderSettings.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0197" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="has Notes Help Section" name="SQLExtras : New-SSRSFolderSettings.has Notes Help Section" time="0.0288" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : New-SSRSFolderSettings.Should throw an error if connecting to SQL Server Fails" time="0.0805" asserts="0" success="True" result="Success" executed="True" />
+          <test-case description="Should throw an error if the user already exists" name="SQLExtras : New-SSRSFolderSettings.Should throw an error if the user already exists" time="2.3078" asserts="0" success="True" result="Success" executed="True" />
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

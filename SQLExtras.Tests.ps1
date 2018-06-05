@@ -1,5 +1,5 @@
 ﻿# ----- Get the module name
-$ModulePath = 'F:\GitHub\SQLExtras'
+$ModulePath = $PSScriptRoot
 
 $ModuleName = $ModulePath | Split-Path -Leaf
 
@@ -21,7 +21,7 @@ Describe "$ModuleName : Module Tests" {
         [System.Management.Automation.PSParser]::Tokenize($_.Matches.Groups[1].Value, [ref]$null).Content
     }
 
-    $moduleCommandNames = (Get-Command -Module $ModuleName)
+    $moduleCommandNames = (Get-Command -Module $ModuleName | where CommandType -ne Alias)
 
     it 'should have a test for each function' {
         Compare-Object $moduleCommandNames $testNames | where { $_.SideIndicator -eq '<=' } | select inputobject | should beNullOrEmpty
@@ -32,7 +32,156 @@ Describe "$ModuleName : Module Tests" {
 
 Write-Output "`n`n"
 
-Describe "SQLExtras : Import-SSRSReport" {
+Describe "$ModuleName : Install-SQLServer" {
+    # ----- Not convinced I even need this function.
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLMemberRole" {
+    
+    Mock -CommandName New-Object -ParameterFilter { $TypeName -eq "Microsoft.SqlServer.Management.Common.ServerConnection" } -MockWith {
+        $Obj = New-Object -TypeName psobject -Property (@{
+            'ServerInstance' = 'localhost'
+        })
+
+        Return $Obj
+    }
+
+    Mock -CommandName New-Object -ParameterFilter { $TypeName -eq "Microsoft.SqlServer.Management.SMO.Server" } -MockWith {
+        $D = @()
+
+        $U1 = New-Object -TypeName psobject (@{
+            'Name' = "User1"
+            'Login' = "Domain\User1"
+        }) 
+        $U1 | Add-Member -MemberType NoteProperty -Name EnumRoles -Value @('db_owner','RSExecRole')
+
+        $U2 = New-Object -TypeName psobject (@{
+            'Name' = "User2"
+            'Login' = "Domain\User2"
+        }) 
+
+        $U2 | Add-Member -MemberType NoteProperty -Name EnumRoles -Value @('db_owner')
+        
+        For ( $I = 1; $I -le 4; $I++ ) {   
+            $D += New-Object -TypeName psobject (@{
+                'Name' = "DB$I"
+                'Users' = $U1
+            })           
+        }
+
+        
+
+        ($D | where $Name -eq "DB1" ).$Users += $U2
+        
+        $Obj = New-Object -TypeName psobject -Property (@{
+            'Databases' = $D
+        })
+           
+        Return $Obj
+    }
+
+    Context Output {
+
+  #      $Users = Get-SQLMemberRole -Verbose
+
+        It "should return an custom object" {
+            $Users | should beofType PSObject 
+        } -Pending
+
+        It "SHould return all (5) objects when a membername is not included" {
+            $Users | Measure-Object | Select-Object -ExpandProperty Count | Should HaveCount 5
+        } -Pending
+
+        It "Should return only 1 object when a Membername is included" {
+            Get-SQLMemberRole -MemberName U2 | Should HaveCount 1
+        } -Pending
+
+        It "Should return all objects when a DB is not included" {
+            $users | Should HaveCount 1
+        } -Pending
+
+        It "Should return all objects for a DB (2) when a DB is included" {
+            Get-SQLMemberRole -Database DB1 | Should HaveCount 1
+        } -Pending
+
+        It "Should return only 1 object when a DB and Member name is included" {
+            Get-SQLMemberRole -Database DB1 -MemberName U2 | Should HaveCount 1
+        } -Pending
+    }
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Set-SQLPermission" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLPermission" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLDatabase" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Remove-SQLDatabase" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Repair-SQLDatabase" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLJob" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Set-SQLJob" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : New-SQLSchedule" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLSchedule" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Import-SSRSReport" {
     # ----- Get Function Help
     # ----- Pester to test Comment based help
     # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
@@ -187,7 +336,7 @@ Describe "SQLExtras : Import-SSRSReport" {
 
 Write-Output "`n`n"
 
-Describe "SQLExtras : Backup-SSRSReport" {
+Describe "$ModuleName : Backup-SSRSReport" {
     # ----- Get Function Help
     # ----- Pester to test Comment based help
     # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
@@ -263,7 +412,14 @@ Describe "SQLExtras : Backup-SSRSReport" {
 
 Write-Output "`n`n"
 
-Describe "SQLExtras : Get-SSRSFolderSettings" {
+Describe "$ModuleName : Get-SSRSReport" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SSRSFolderSettings" {
     # ----- Get Function Help
     # ----- Pester to test Comment based help
     # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
@@ -362,7 +518,7 @@ Describe "SQLExtras : Get-SSRSFolderSettings" {
 
 Write-Output "`n`n"
 
-Describe "SQLExtras : Set-SSRSFolderSettings" {
+Describe "$ModuleName : Set-SSRSFolderSettings" {
     # ----- Get Function Help
     # ----- Pester to test Comment based help
     # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
@@ -465,7 +621,7 @@ Describe "SQLExtras : Set-SSRSFolderSettings" {
 
 Write-Output "`n`n"
 
-Describe "SQLExtras : New-SSRSFolderSettings" {
+Describe "$ModuleName : New-SSRSFolderSettings" {
     # ----- Get Function Help
     # ----- Pester to test Comment based help
     # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
@@ -605,3 +761,68 @@ Describe "SQLExtras : New-SSRSFolderSettings" {
         }
     }   
 } 
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SSRSSitePermissions" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Add-SSRSSitePermissions" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SSRSReportDataSource" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Set-SSRSReportDataSource" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLClientProtocol" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLNetworkProtocol" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Set-SQLNetworkProtocol" {
+}
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLDBMail" {
+}
+
+
+#-------------------------------------------------------------------------------------
+
+Write-Output "`n`n"
+
+Describe "$ModuleName : Get-SQLDBMailAccount" {
+}
+
