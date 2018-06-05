@@ -37,8 +37,7 @@ on_success:
   - git config --global user.email "jeffbuenting@gmail.com"
   - git config --global user.name "jeffbuenting"
   - ps: $Readme = Get-Content readme.md
-  - ps: $Readme -replace 'Version: \d*\.\d*\.\d*','Version: ' 
-  #| Set-Content README.md
+  - ps: '$Readme -replace "Version: \d*\.\d*\.\d*","Version: $env:APPVEYOR_BUILD_VERSION" | Set-Content README.md'
   
   # ----- Update the module manifests version
   
