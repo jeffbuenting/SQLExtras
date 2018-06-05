@@ -31,7 +31,20 @@ test_script:
 on_success:
   # ----- Enable Git Credential Store and add token
   - git config --global credential.helper store
+  
+  # ----- Update Readme.md Version number
   - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
   - git config --global user.email "jeffbuenting@gmail.com"
   - git config --global user.name "jeffbuenting"
-  - ls
+  - ps: $Readme = Get-Content readme.md
+  - ps: $Readme -replace 'Version: \d*\.\d*\.\d*','Version: $env:APPVEYOR_BUILD_VERSION' | Set-Content README.md
+  
+  # ----- Update the module manifests version
+  
+  # ----- Push back to Github
+  - git checkout master
+  - git add --all
+  - git status
+  - git commit -s -m "Update version to $env:APPVEYOR_BUILD_VERSION"
+  - git push origin master
+  
