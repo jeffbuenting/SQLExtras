@@ -1,125 +1,403 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="42" errors="0" failures="6" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2018-06-04" time="13:44:35">
-  <environment user="Jeff.Buenting" machine-name="SL-JEFFB" cwd="F:\GitHub\SQLExtras" user-domain="STRATUSLIVEDEMO" platform="Microsoft Windows 10 Enterprise|C:\WINDOWS|\Device\Harddisk0\Partition1" nunit-version="2.5.8.0" os-version="10.0.16299" clr-version="4.0.30319.42000" />
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="43" errors="0" failures="30" not-run="0" inconclusive="6" ignored="0" skipped="0" invalid="0" date="2018-06-05" time="18:35:38">
+  <environment user="appveyor" machine-name="APPVYR-WIN" cwd="C:\projects\sqlextras" user-domain="APPVYR-WIN" platform="Microsoft Windows Server 2012 R2 Datacenter|C:\windows|\Device\Harddisk0\Partition5" nunit-version="2.5.8.0" os-version="6.3.9600" clr-version="4.0.30319.42000" />
   <culture-info current-culture="en-US" current-uiculture="en-US" />
-  <test-suite type="PowerShell" name="Pester" executed="True" result="Failure" success="False" time="35.3824" asserts="0">
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Failure" success="False" time="34.2982" asserts="0" description="Pester">
     <results>
-      <test-suite type="TestFixture" name="SQLExtras : Module Tests" executed="True" result="Failure" success="False" time="0.4266" asserts="0" description="SQLExtras : Module Tests">
+      <test-suite type="TestFixture" name="C:\projects\sqlextras\SQLExtras.Tests.ps1" executed="True" result="Failure" success="False" time="34.2982" asserts="0" description="C:\projects\sqlextras\SQLExtras.Tests.ps1">
         <results>
-          <test-case description="should have a test for each function" name="SQLExtras : Module Tests.should have a test for each function" time="0.4266" asserts="0" success="False" result="Failure" executed="True">
-            <failure>
-              <message>Expected: value to be empty but it was {@{InputObject=Refresh-SQLDatabase}}</message>
-              <stack-trace>at line: 27 in F:\GitHub\SQLExtras\SQLExtras.Tests.ps1
-27:         Compare-Object $moduleCommandNames $testNames | where { $_.SideIndicator -eq '&lt;=' } | select inputobject | should beNullOrEmpty
+          <test-suite type="TestFixture" name="sqlextras : Module Tests" executed="True" result="Success" success="True" time="10.7623" asserts="0" description="sqlextras : Module Tests">
+            <results>
+              <test-case description="should have a test for each function" name="sqlextras : Module Tests.should have a test for each function" time="10.7623" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Install-SQLServer" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Install-SQLServer">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLMemberRole" executed="True" result="Inconclusive" success="True" time="0.3724" asserts="0" description="sqlextras : Get-SQLMemberRole">
+            <results>
+              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.3724" asserts="0" description="Output">
+                <results>
+                  <test-case description="should return an custom object" name="sqlextras : Get-SQLMemberRole.Output.should return an custom object" time="0.3323" asserts="0" success="True" result="Inconclusive" executed="True" />
+                  <test-case description="SHould return all (5) objects when a membername is not included" name="sqlextras : Get-SQLMemberRole.Output.SHould return all (5) objects when a membername is not included" time="0.0151" asserts="0" success="True" result="Inconclusive" executed="True" />
+                  <test-case description="Should return only 1 object when a Membername is included" name="sqlextras : Get-SQLMemberRole.Output.Should return only 1 object when a Membername is included" time="0.002" asserts="0" success="True" result="Inconclusive" executed="True" />
+                  <test-case description="Should return all objects when a DB is not included" name="sqlextras : Get-SQLMemberRole.Output.Should return all objects when a DB is not included" time="0.002" asserts="0" success="True" result="Inconclusive" executed="True" />
+                  <test-case description="Should return all objects for a DB (2) when a DB is included" name="sqlextras : Get-SQLMemberRole.Output.Should return all objects for a DB (2) when a DB is included" time="0.0023" asserts="0" success="True" result="Inconclusive" executed="True" />
+                  <test-case description="Should return only 1 object when a DB and Member name is included" name="sqlextras : Get-SQLMemberRole.Output.Should return only 1 object when a DB and Member name is included" time="0.0187" asserts="0" success="True" result="Inconclusive" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Set-SQLPermission" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Set-SQLPermission">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLPermission" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLPermission">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLDatabase" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLDatabase">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Remove-SQLDatabase" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Remove-SQLDatabase">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Repair-SQLDatabase" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Repair-SQLDatabase">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLJob" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLJob">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Set-SQLJob" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Set-SQLJob">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : New-SQLSchedule" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : New-SQLSchedule">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLSchedule" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLSchedule">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Import-SSRSReport" executed="True" result="Failure" success="False" time="10.2283" asserts="0" description="sqlextras : Import-SSRSReport">
+            <results>
+              <test-suite type="TestFixture" name="Help" executed="True" result="Failure" success="False" time="0.4865" asserts="0" description="Help">
+                <results>
+                  <test-case description="has Synopsis Help Section" name="sqlextras : Import-SSRSReport.Help.has Synopsis Help Section" time="0.3413" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 200
+200:             $H.Synopsis | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Description Help Section" name="sqlextras : Import-SSRSReport.Help.has Description Help Section" time="0.075" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 204
+204:             $H.Description | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Parameters Help Section" name="sqlextras : Import-SSRSReport.Help.has Parameters Help Section" time="0.0144" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 208
+208:             $H.Parameters | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="Example - Count should be greater than 0" name="sqlextras : Import-SSRSReport.Help.Example - Count should be greater than 0" time="0.042" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected 0 to be greater than the actual value, but got 0.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 213
+213:             $H.examples.example.code.count | Should BeGreaterthan 0</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Notes Help Section" name="sqlextras : Import-SSRSReport.Help.has Notes Help Section" time="0.0138" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 225
+225:             $H.alertSet | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Failure" success="False" time="9.7418" asserts="0" description="Execution">
+                <results>
+                  <test-case description="Should throw an error if the connection to the SSRS server fails" name="sqlextras : Import-SSRSReport.Execution.Should throw an error if the connection to the SSRS server fails" time="2.547" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should show no warnings if no warnings exist" name="sqlextras : Import-SSRSReport.Execution.Should show no warnings if no warnings exist" time="2.432" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Import-SSRSReports : Error Connecting to SSRS SSRS
+
+     There was an error downloading 'http://ssrs/ReportServer/ReportService2010.asmx'.
+
+     System.Net.WebException</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\sqlextras.psm1: line 1416
+1416:                 Throw "Import-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
 </stack-trace>
-            </failure>
-          </test-case>
-        </results>
-      </test-suite>
-      <test-suite type="TestFixture" name="SQLExtras : Import-SSRSReport" executed="True" result="Failure" success="False" time="3.0639" asserts="0" description="SQLExtras : Import-SSRSReport">
-        <results>
-          <test-case description="has Synopsis Help Section" name="SQLExtras : Import-SSRSReport.has Synopsis Help Section" time="0.2242" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Description Help Section" name="SQLExtras : Import-SSRSReport.has Description Help Section" time="0.0364" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Parameters Help Section" name="SQLExtras : Import-SSRSReport.has Parameters Help Section" time="0.0195" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Import-SSRSReport.Example - Count should be greater than 0" time="0.0277" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Import-SSRSReport.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.03" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Notes Help Section" name="SQLExtras : Import-SSRSReport.has Notes Help Section" time="0.0159" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should throw an error if the connection to the SSRS server fails" name="SQLExtras : Import-SSRSReport.Should throw an error if the connection to the SSRS server fails" time="2.5231" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should show no warnings if no warnings exist" name="SQLExtras : Import-SSRSReport.Should show no warnings if no warnings exist" time="0.0595" asserts="0" success="False" result="Failure" executed="True">
-            <failure>
-              <message>Upload-SSRSReports : Error Connecting to SSRS SSRS
+                    </failure>
+                  </test-case>
+                  <test-case description="Displays a Warning if one exists" name="sqlextras : Import-SSRSReport.Execution.Displays a Warning if one exists" time="2.3909" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Import-SSRSReports : Error Connecting to SSRS SSRS
 
      There was an error downloading 'http://ssrs/ReportServer/ReportService2010.asmx'.
 
      System.Net.WebException</message>
-              <stack-trace>at line: 1428 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
-            </failure>
-          </test-case>
-          <test-case description="Displays a Warning if one exists" name="SQLExtras : Import-SSRSReport.Displays a Warning if one exists" time="0.0734" asserts="0" success="False" result="Failure" executed="True">
-            <failure>
-              <message>Upload-SSRSReports : Error Connecting to SSRS SSRS
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\sqlextras.psm1: line 1416
+1416:                 Throw "Import-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="Should Ignore all Warnings" name="sqlextras : Import-SSRSReport.Execution.Should Ignore all Warnings" time="2.3719" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Import-SSRSReports : Error Connecting to SSRS SSRS
 
      There was an error downloading 'http://ssrs/ReportServer/ReportService2010.asmx'.
 
      System.Net.WebException</message>
-              <stack-trace>at line: 1428 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
-            </failure>
-          </test-case>
-          <test-case description="Should Ignore all Warnings" name="SQLExtras : Import-SSRSReport.Should Ignore all Warnings" time="0.0542" asserts="0" success="False" result="Failure" executed="True">
-            <failure>
-              <message>Upload-SSRSReports : Error Connecting to SSRS SSRS
-
-     There was an error downloading 'http://ssrs/ReportServer/ReportService2010.asmx'.
-
-     System.Net.WebException</message>
-              <stack-trace>at line: 1428 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
-            </failure>
-          </test-case>
-        </results>
-      </test-suite>
-      <test-suite type="TestFixture" name="SQLExtras : Backup-SSRSReport" executed="True" result="Failure" success="False" time="2.8106" asserts="0" description="SQLExtras : Backup-SSRSReport">
-        <results>
-          <test-case description="has Synopsis Help Section" name="SQLExtras : Backup-SSRSReport.has Synopsis Help Section" time="0.1394" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Description Help Section" name="SQLExtras : Backup-SSRSReport.has Description Help Section" time="0.0212" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Parameters Help Section" name="SQLExtras : Backup-SSRSReport.has Parameters Help Section" time="0.0228" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Backup-SSRSReport.Example - Count should be greater than 0" time="0.023" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Backup-SSRSReport.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0196" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Notes Help Section" name="SQLExtras : Backup-SSRSReport.has Notes Help Section" time="0.0191" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : Backup-SSRSReport.Should throw an error if connecting to SQL Server Fails" time="0.0782" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Error occurred in Context block" name="SQLExtras : Backup-SSRSReport.Error occurred in Context block" time="2.4872" asserts="0" success="False" result="Failure" executed="True">
-            <failure>
-              <message>Backup-SSRSReports : Error Connecting to SSRS SSRSServer
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\sqlextras.psm1: line 1416
+1416:                 Throw "Import-SSRSReports : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Backup-SSRSReport" executed="True" result="Failure" success="False" time="2.6247" asserts="0" description="sqlextras : Backup-SSRSReport">
+            <results>
+              <test-suite type="TestFixture" name="Help" executed="True" result="Failure" success="False" time="0.2009" asserts="0" description="Help">
+                <results>
+                  <test-case description="has Synopsis Help Section" name="sqlextras : Backup-SSRSReport.Help.has Synopsis Help Section" time="0.1103" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 355
+355:             $H.Synopsis | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Description Help Section" name="sqlextras : Backup-SSRSReport.Help.has Description Help Section" time="0.0502" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 359
+359:             $H.Description | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Parameters Help Section" name="sqlextras : Backup-SSRSReport.Help.has Parameters Help Section" time="0.011" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 363
+363:             $H.Parameters | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="Example - Count should be greater than 0" name="sqlextras : Backup-SSRSReport.Help.Example - Count should be greater than 0" time="0.0182" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected 0 to be greater than the actual value, but got 0.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 368
+368:             $H.examples.example.code.count | Should BeGreaterthan 0</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Notes Help Section" name="sqlextras : Backup-SSRSReport.Help.has Notes Help Section" time="0.0112" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 380
+380:             $H.alertSet | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="0.0467" asserts="0" description="Execution">
+                <results>
+                  <test-case description="Should throw an error if connecting to SQL Server Fails" name="sqlextras : Backup-SSRSReport.Execution.Should throw an error if connecting to SQL Server Fails" time="0.0467" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Output" executed="True" result="Failure" success="False" time="2.377" asserts="0" description="Output">
+                <results>
+                  <test-case description="Error occurred in Context block" name="sqlextras : Backup-SSRSReport.Output.Error occurred in Context block" time="2.377" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Backup-SSRSReports : Error Connecting to SSRS SSRSServer
 
      There was an error downloading 'http://ssrsserver/ReportServer/ReportService2010.asmx'.
 
      System.Net.WebException</message>
-              <stack-trace>At F:\GitHub\SQLExtras\sqlextras.psm1:1529 char:17</stack-trace>
-            </failure>
-          </test-case>
-        </results>
-      </test-suite>
-      <test-suite type="TestFixture" name="SQLExtras : Get-SSRSFolderSettings" executed="True" result="Failure" success="False" time="23.7521" asserts="0" description="SQLExtras : Get-SSRSFolderSettings">
-        <results>
-          <test-case description="has Synopsis Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Synopsis Help Section" time="0.1438" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Description Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Description Help Section" time="0.0258" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Parameters Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Parameters Help Section" time="0.0145" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Get-SSRSFolderSettings.Example - Count should be greater than 0" time="0.0288" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Get-SSRSFolderSettings.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0183" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Notes Help Section" name="SQLExtras : Get-SSRSFolderSettings.has Notes Help Section" time="0.0152" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : Get-SSRSFolderSettings.Should throw an error if connecting to SQL Server Fails" time="2.3746" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should return a custom object" name="SQLExtras : Get-SSRSFolderSettings.Should return a custom object" time="21.1311" asserts="0" success="False" result="Failure" executed="True">
-            <failure>
-              <message>Get-SSRSRoleMembership : Error Connecting to SSRS Test
+                      <stack-trace>At C:\projects\sqlextras\sqlextras.psm1:1517 char:17</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SSRSReport" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SSRSReport">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SSRSFolderSettings" executed="True" result="Failure" success="False" time="4.988" asserts="0" description="sqlextras : Get-SSRSFolderSettings">
+            <results>
+              <test-suite type="TestFixture" name="Help" executed="True" result="Failure" success="False" time="0.1374" asserts="0" description="Help">
+                <results>
+                  <test-case description="has Synopsis Help Section" name="sqlextras : Get-SSRSFolderSettings.Help.has Synopsis Help Section" time="0.068" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 438
+438:             $H.Synopsis | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Description Help Section" name="sqlextras : Get-SSRSFolderSettings.Help.has Description Help Section" time="0.012" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 442
+442:             $H.Description | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Parameters Help Section" name="sqlextras : Get-SSRSFolderSettings.Help.has Parameters Help Section" time="0.0153" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 446
+446:             $H.Parameters | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="Example - Count should be greater than 0" name="sqlextras : Get-SSRSFolderSettings.Help.Example - Count should be greater than 0" time="0.0204" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected 0 to be greater than the actual value, but got 0.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 451
+451:             $H.examples.example.code.count | Should BeGreaterthan 0</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Notes Help Section" name="sqlextras : Get-SSRSFolderSettings.Help.has Notes Help Section" time="0.0217" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 463
+463:             $H.alertSet | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="2.4288" asserts="0" description="Execution">
+                <results>
+                  <test-case description="Should throw an error if connecting to SQL Server Fails" name="sqlextras : Get-SSRSFolderSettings.Execution.Should throw an error if connecting to SQL Server Fails" time="2.4288" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Output" executed="True" result="Failure" success="False" time="2.4218" asserts="0" description="Output">
+                <results>
+                  <test-case description="Should return a custom object" name="sqlextras : Get-SSRSFolderSettings.Output.Should return a custom object" time="2.4218" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Get-SSRSFolderSettings : Error Connecting to SSRS Test
 
      There was an error downloading 'http://test/ReportServer/ReportService2010.asmx'.
 
      System.Net.WebException</message>
-              <stack-trace>at line: 1690 in F:\GitHub\SQLExtras\sqlextras.psm1</stack-trace>
-            </failure>
-          </test-case>
-        </results>
-      </test-suite>
-      <test-suite type="TestFixture" name="SQLExtras : Set-SSRSFolderSettings" executed="True" result="Success" success="True" time="2.6717" asserts="0" description="SQLExtras : Set-SSRSFolderSettings">
-        <results>
-          <test-case description="has Synopsis Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Synopsis Help Section" time="0.1389" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Description Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Description Help Section" time="0.0211" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Parameters Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Parameters Help Section" time="0.0274" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Count should be greater than 0" name="SQLExtras : Set-SSRSFolderSettings.Example - Count should be greater than 0" time="0.0132" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : Set-SSRSFolderSettings.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0318" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Notes Help Section" name="SQLExtras : Set-SSRSFolderSettings.has Notes Help Section" time="0.0186" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : Set-SSRSFolderSettings.Should throw an error if connecting to SQL Server Fails" time="2.4207" asserts="0" success="True" result="Success" executed="True" />
-        </results>
-      </test-suite>
-      <test-suite type="TestFixture" name="SQLExtras : New-SSRSFolderSettings" executed="True" result="Success" success="True" time="2.6575" asserts="0" description="SQLExtras : New-SSRSFolderSettings">
-        <results>
-          <test-case description="has Synopsis Help Section" name="SQLExtras : New-SSRSFolderSettings.has Synopsis Help Section" time="0.1744" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Description Help Section" name="SQLExtras : New-SSRSFolderSettings.has Description Help Section" time="0.0149" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Parameters Help Section" name="SQLExtras : New-SSRSFolderSettings.has Parameters Help Section" time="0.014" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Count should be greater than 0" name="SQLExtras : New-SSRSFolderSettings.Example - Count should be greater than 0" time="0.0173" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" name="SQLExtras : New-SSRSFolderSettings.Example - Remarks on -------------------------- EXAMPLE 1 --------------------------" time="0.0197" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="has Notes Help Section" name="SQLExtras : New-SSRSFolderSettings.has Notes Help Section" time="0.0288" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should throw an error if connecting to SQL Server Fails" name="SQLExtras : New-SSRSFolderSettings.Should throw an error if connecting to SQL Server Fails" time="0.0805" asserts="0" success="True" result="Success" executed="True" />
-          <test-case description="Should throw an error if the user already exists" name="SQLExtras : New-SSRSFolderSettings.Should throw an error if the user already exists" time="2.3078" asserts="0" success="True" result="Success" executed="True" />
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\sqlextras.psm1: line 1678
+1678:                 Throw "Get-SSRSFolderSettings : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Set-SSRSFolderSettings" executed="True" result="Failure" success="False" time="2.6966" asserts="0" description="sqlextras : Set-SSRSFolderSettings">
+            <results>
+              <test-suite type="TestFixture" name="Help" executed="True" result="Failure" success="False" time="0.254" asserts="0" description="Help">
+                <results>
+                  <test-case description="has Synopsis Help Section" name="sqlextras : Set-SSRSFolderSettings.Help.has Synopsis Help Section" time="0.0596" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 537
+537:             $H.Synopsis | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Description Help Section" name="sqlextras : Set-SSRSFolderSettings.Help.has Description Help Section" time="0.0104" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 541
+541:             $H.Description | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Parameters Help Section" name="sqlextras : Set-SSRSFolderSettings.Help.has Parameters Help Section" time="0.0144" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 545
+545:             $H.Parameters | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="Example - Count should be greater than 0" name="sqlextras : Set-SSRSFolderSettings.Help.Example - Count should be greater than 0" time="0.0463" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected 0 to be greater than the actual value, but got 0.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 550
+550:             $H.examples.example.code.count | Should BeGreaterthan 0</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Notes Help Section" name="sqlextras : Set-SSRSFolderSettings.Help.has Notes Help Section" time="0.1233" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 562
+562:             $H.alertSet | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="2.4426" asserts="0" description="Execution">
+                <results>
+                  <test-case description="Should throw an error if connecting to SQL Server Fails" name="sqlextras : Set-SSRSFolderSettings.Execution.Should throw an error if connecting to SQL Server Fails" time="2.4426" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Output" executed="True" result="Success" success="True" time="0" asserts="0" description="Output">
+                <results />
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : New-SSRSFolderSettings" executed="True" result="Failure" success="False" time="2.626" asserts="0" description="sqlextras : New-SSRSFolderSettings">
+            <results>
+              <test-suite type="TestFixture" name="Help" executed="True" result="Failure" success="False" time="0.125" asserts="0" description="Help">
+                <results>
+                  <test-case description="has Synopsis Help Section" name="sqlextras : New-SSRSFolderSettings.Help.has Synopsis Help Section" time="0.0775" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 640
+640:             $H.Synopsis | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Description Help Section" name="sqlextras : New-SSRSFolderSettings.Help.has Description Help Section" time="0.0133" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 644
+644:             $H.Description | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Parameters Help Section" name="sqlextras : New-SSRSFolderSettings.Help.has Parameters Help Section" time="0.0103" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 648
+648:             $H.Parameters | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="Example - Count should be greater than 0" name="sqlextras : New-SSRSFolderSettings.Help.Example - Count should be greater than 0" time="0.0109" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected 0 to be greater than the actual value, but got 0.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 653
+653:             $H.examples.example.code.count | Should BeGreaterthan 0</stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case description="has Notes Help Section" name="sqlextras : New-SSRSFolderSettings.Help.has Notes Help Section" time="0.013" asserts="0" success="False" result="Failure" executed="True">
+                    <failure>
+                      <message>Expected a value, but got $null or empty.</message>
+                      <stack-trace>at &lt;ScriptBlock&gt;, C:\projects\sqlextras\SQLExtras.Tests.ps1: line 665
+665:             $H.alertSet | Should Not BeNullorEmpty</stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="2.5011" asserts="0" description="Execution">
+                <results>
+                  <test-case description="Should throw an error if connecting to SQL Server Fails" name="sqlextras : New-SSRSFolderSettings.Execution.Should throw an error if connecting to SQL Server Fails" time="0.0324" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should throw an error if the user already exists" name="sqlextras : New-SSRSFolderSettings.Execution.Should throw an error if the user already exists" time="2.4686" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Output" executed="True" result="Success" success="True" time="0" asserts="0" description="Output">
+                <results />
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SSRSSitePermissions" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SSRSSitePermissions">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Add-SSRSSitePermissions" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Add-SSRSSitePermissions">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SSRSReportDataSource" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SSRSReportDataSource">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Set-SSRSReportDataSource" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Set-SSRSReportDataSource">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLClientProtocol" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLClientProtocol">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLNetworkProtocol" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLNetworkProtocol">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Set-SQLNetworkProtocol" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Set-SQLNetworkProtocol">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLDBMail" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLDBMail">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="sqlextras : Get-SQLDBMailAccount" executed="True" result="Success" success="True" time="0" asserts="0" description="sqlextras : Get-SQLDBMailAccount">
+            <results />
+          </test-suite>
         </results>
       </test-suite>
     </results>
