@@ -1678,6 +1678,8 @@ Function Get-SSRSFolderSettings {
                 Throw "Get-SSRSFolderSettings : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
         }   
         
+        Write-Verbose "RS = $($RS | Get-Member | Out-String)"
+
         $InheritParent = $true        
     }
 
