@@ -266,8 +266,6 @@ InModuleScope $ModuleName {
                 }
 
                 Import-SSRSReport -SSRSServer SSRS -ReportFile Report 3>&1 | Should BENullOrEmpty
-            
-                 Assert-VerifiableMocks
            
             }
         

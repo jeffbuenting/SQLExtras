@@ -1904,8 +1904,7 @@ Function New-SSRSFolderSettings {
         $Policies = $RS.GetPolicies($Folder, [ref]$InheritParent) | where GroupUserName -ne $User.GroupUserName
 
         if ( $User -in $Policies.GroupUserName ) { 
-            Write-Warning "New-SSRSFolderSettings : User already exists"
-            break
+            Throw "New-SSRSFolderSettings : User already exists"
         }
 
         $NewPolicies = @()
