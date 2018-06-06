@@ -6,7 +6,7 @@ Powershell SQL Cmdlets and SQL Scripts wrapped in a SQLExtras module
 
 ### Master
 
-Version: 5.0.18
+Version: 5.0.19
 
 [![Build status](https://ci.appveyor.com/api/projects/status/3r3ejc8y9pvjh9f3?svg=true)](https://ci.appveyor.com/project/jeffbuenting/sqlextras)
 
