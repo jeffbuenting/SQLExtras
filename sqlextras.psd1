@@ -12,7 +12,7 @@
 RootModule = 'sqlextras.psm1'
 
 # Version number of this module.
-ModuleVersion = '5.0.20'
+ModuleVersion = '5.0.23'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
