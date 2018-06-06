@@ -17,9 +17,9 @@ InModuleScope $ModuleName {
 
     Describe "$ModuleName : Module Tests" {
 
-        $Module = Get-module -Name $ModuleName
+        $Module = Get-module -Name $ModuleName -Verbose
 
-        $testFile = Get-ChildItem $module.ModuleBase -Filter '*.Tests.ps1' -File
+        $testFile = Get-ChildItem $module.ModuleBase -Filter '*.Tests.ps1' -File -verbose
     
         $testNames = Select-String -Path $testFile.FullName -Pattern 'describe\s[^\$](.+)?\s+{' | ForEach-Object {
             [System.Management.Automation.PSParser]::Tokenize($_.Matches.Groups[1].Value, [ref]$null).Content
