@@ -15,7 +15,6 @@ branches:
   only:
     - master
 
-image: WMF 5
     
 install:
   - choco install pester
