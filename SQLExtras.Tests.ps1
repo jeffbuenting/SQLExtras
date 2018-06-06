@@ -197,32 +197,32 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                {$H.Synopsis} | Should Not BeNullorEmpty
+                { $H.Synopsis } | Should Not BeNullorEmpty
             }
 
             It "has Description Help Section" {
-                $H.Description | Should Not BeNullorEmpty
+                { $H.Description } | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                $H.Parameters | Should Not BeNullorEmpty
+                { $H.Parameters } | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                $H.examples.example.code.count | Should BeGreaterthan 0
+                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    $Example.remarks | Should not BeNullOrEmpty
+                    { $Example.remarks } | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                $H.alertSet | Should Not BeNullorEmpty
+                { $H.alertSet } | Should Not BeNullorEmpty
             }
         } 
 
@@ -353,32 +353,32 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                $H.Synopsis | Should Not BeNullorEmpty
+                { $H.Synopsis } | Should Not BeNullorEmpty
             }
 
             It "has Description Help Section" {
-                $H.Description | Should Not BeNullorEmpty
+                { $H.Description } | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                $H.Parameters | Should Not BeNullorEmpty
+                { $H.Parameters } | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                $H.examples.example.code.count | Should BeGreaterthan 0
+                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    $Example.remarks | Should not BeNullOrEmpty
+                    { $Example.remarks } | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                $H.alertSet | Should Not BeNullorEmpty
+                { $H.alertSet } | Should Not BeNullorEmpty
             }
         } 
 
@@ -436,32 +436,32 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                $H.Synopsis | Should Not BeNullorEmpty
+                { $H.Synopsis } | Should Not BeNullorEmpty
             }
 
             It "has Description Help Section" {
-                $H.Description | Should Not BeNullorEmpty
+                { $H.Description } | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                $H.Parameters | Should Not BeNullorEmpty
+                { $H.Parameters } | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                $H.examples.example.code.count | Should BeGreaterthan 0
+                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    $Example.remarks | Should not BeNullOrEmpty
+                    { $Example.remarks } | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                $H.alertSet | Should Not BeNullorEmpty
+                { $H.alertSet } | Should Not BeNullorEmpty
             }
         }
 
@@ -536,32 +536,32 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                $H.Synopsis | Should Not BeNullorEmpty
+                { $H.Synopsis } | Should Not BeNullorEmpty
             }
 
             It "has Description Help Section" {
-                $H.Description | Should Not BeNullorEmpty
+                { $H.Description } | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                $H.Parameters | Should Not BeNullorEmpty
+                { $H.Parameters } | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                $H.examples.example.code.count | Should BeGreaterthan 0
+                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    $Example.remarks | Should not BeNullOrEmpty
+                    { $Example.remarks } | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                $H.alertSet | Should Not BeNullorEmpty
+                { $H.alertSet } | Should Not BeNullorEmpty
             }
         }
 
@@ -639,32 +639,32 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                $H.Synopsis | Should Not BeNullorEmpty
+                { $H.Synopsis } | Should Not BeNullorEmpty
             }
 
             It "has Description Help Section" {
-                $H.Description | Should Not BeNullorEmpty
+                { $H.Description } | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                $H.Parameters | Should Not BeNullorEmpty
+                { $H.Parameters } | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                $H.examples.example.code.count | Should BeGreaterthan 0
+                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    $Example.remarks | Should not BeNullOrEmpty
+                    { $Example.remarks } | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                $H.alertSet | Should Not BeNullorEmpty
+                { $H.alertSet } | Should Not BeNullorEmpty
             }
         }
 
