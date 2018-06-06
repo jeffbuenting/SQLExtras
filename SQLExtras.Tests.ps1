@@ -1,9 +1,11 @@
-﻿# ----- Get the module name
+﻿
+
+# ----- Get the module name
 if ( -Not $PSScriptRoot ) { $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }
 
 $ModulePath = $PSScriptRoot
 
-$ModuleName = $ModulePath | Split-Path -Leaf
+$Global:ModuleName = $ModulePath | Split-Path -Leaf
 
 # ----- Remove and then import the module.  This is so any new changes are imported.
 Get-Module -Name $ModuleName -All | Remove-Module -Force -Verbose
