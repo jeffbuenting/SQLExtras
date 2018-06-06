@@ -474,7 +474,7 @@ InModuleScope $ModuleName {
 
         Context 'Output' {
 
-            Mock -CommandName New-WebServiceProxy -ParameterFilter { $URI -and $UseDefaultCredential.ispresent }  -Verifiable -MockWith {
+            Mock -CommandName New-WebServiceProxy -Verifiable -MockWith {
                 $Obj = New-Object -TypeName PSObject
                 $obj | Add-Member -memberType ScriptMethod  -Name "CreateCatalogItem" -Value {
                     Param (
@@ -515,7 +515,7 @@ InModuleScope $ModuleName {
             }
 
             It "Should return a custom object" {
-                Get-SSRSFolderSettings -SSRSServer Test -Verbose | Should BeofType PSObject
+                Get-SSRSFolderSettings -SSRSServer Test | Should BeofType PSObject
             
             }
 
