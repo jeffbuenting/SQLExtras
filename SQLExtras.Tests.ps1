@@ -197,7 +197,7 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                $H.Synopsis | Should Not BeNullorEmpty
+                ($H.Synopsis) | Should Not BeNullorEmpty
             }
 
             It "has Description Help Section" {
