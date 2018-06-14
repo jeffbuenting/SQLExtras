@@ -661,15 +661,7 @@ Function Remove-SQLDatabase {
         [String[]]$Database
     )
 
-    Begin {
-        # ----- Load the SQL module if not already loaded
-  #      if ( -Not (Get-module -Name SQLPS) ) {
-  #          Write-Verbose 'Importing SQL Module as it is not already installed'
-  #          $SQLModuleInstalled = $False
-  #          $Location = $PWD
-  #          import-module 'C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\SQLPS\sqlps' -disablenamechecking 
-  #      }
-        
+    Begin {      
         Write-Verbose "Making connection to SQL server: $ServerInstance"
         [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.SMO") | out-null
         $SMOserver = New-Object ('Microsoft.SqlServer.Management.Smo.Server') -argumentlist $ServerInstance
@@ -680,7 +672,7 @@ Function Remove-SQLDatabase {
             Write-Verbose "Dropping Databse $DB"
            # $smoserver.killallprocess($DB)
            # $smoserver.databases[$DB].drop() 
-            invoke-sqlcmd -ServerInstance $ServerInstance -Query "Drop database $DB;" -
+            invoke-sqlcmd -ServerInstance $ServerInstance -Query "Drop database $DB;"
         }
     }
 
