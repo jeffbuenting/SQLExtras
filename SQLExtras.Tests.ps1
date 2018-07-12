@@ -47,6 +47,8 @@ InModuleScope $ModuleName {
     Write-Output "`n`n"
 
     Describe "$ModuleName : Get-SQLMemberRole" {
+
+
     
         Mock -CommandName New-Object -ParameterFilter { $TypeName -eq "Microsoft.SqlServer.Management.Common.ServerConnection" } -MockWith {
             $Obj = New-Object -TypeName psobject -Property (@{
@@ -124,6 +126,458 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
+    Describe "$ModuleName : Set-SQLDBLoginRoles" {
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-SQLDBSecurityRole" {
+        
+        # ----- Get Function Help
+        # ----- Pester to test Comment based help
+        # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+        Context "Help" {
+
+            $H = Help Get-SQLDBSecurityRole -Full
+
+            # ----- Help Tests
+            It "has Synopsis Help Section" {
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
+            }
+
+            It "has Description Help Section" {
+                 $H.Description | Should Not BeNullorEmpty
+            }
+
+            It "has Parameters Help Section" {
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
+            }
+
+            # Examples
+            it "Example - Count should be greater than 0"{
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+            }
+            
+            # Examples - Remarks (small description that comes with the example)
+            foreach ($Example in $H.examples.example)
+            {
+                it "Example - Remarks on $($Example.Title)"{
+                     $Example.remarks  | Should not BeNullOrEmpty
+                }
+            }
+
+            It "has Notes Help Section" {
+                 $H.alertSet  | Should Not BeNullorEmpty
+            }
+        } 
+ 
+        Mock New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.Server' } -MockWith { 
+
+            
+            
+            $DatabaseObj = New-Object -TypeName PSObject  
+            $DatabaseObj | Add-Member -MemberType ScriptMethod -Name Item -Value {
+                Param ($Database)
+
+                $ItemObj = New-Object -TypeName PSObject -Property @{
+                    Roles = New-Object -TypeName PSObject
+                }
+
+                return $ItemObj
+            }                
+            
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                Databases = $DatabaseObj
+            })
+ 
+            Return $Obj
+        }
+
+        Context Execution {
+  
+            It 'Should return a DB Role Object' {
+                Get-SQLDBSecurityRole -SQLServer ServerA -Database DB | Should BeofType PSObject
+            }
+        }
+
+    }
+
+     #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : New-SQLDBSecurityRole" {
+        
+        # ----- Get Function Help
+        # ----- Pester to test Comment based help
+        # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+        Context "Help" {
+
+            $H = Help New-SQLDBSecurityRole -Full
+
+            # ----- Help Tests
+            It "has Synopsis Help Section" {
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
+            }
+
+            It "has Description Help Section" {
+                 $H.Description | Should Not BeNullorEmpty
+            }
+
+            It "has Parameters Help Section" {
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
+            }
+
+            # Examples
+            it "Example - Count should be greater than 0"{
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+            }
+            
+            # Examples - Remarks (small description that comes with the example)
+            foreach ($Example in $H.examples.example)
+            {
+                it "Example - Remarks on $($Example.Title)"{
+                     $Example.remarks  | Should not BeNullOrEmpty
+                }
+            }
+
+            It "has Notes Help Section" {
+                 $H.alertSet  | Should Not BeNullorEmpty
+            }
+        } 
+ 
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.Server' } -MockWith { 
+ 
+            $DatabaseObj = New-Object -TypeName PSObject  
+            $DatabaseObj | Add-Member -MemberType ScriptMethod -Name Item -Value {
+                Param ($Database)
+
+                $ItemObj = New-Object -TypeName PSObject -Property @{
+                    Roles = New-Object -TypeName PSObject
+                }
+
+                return $ItemObj
+            }                
+            
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                Databases = $DatabaseObj
+            })
+ 
+            Return $Obj
+        }
+
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.DatabaseRole' } -MockWith { 
+            $Obj = New-Object -TypeName PSObject
+            $Obj | Add-Member -MemberType ScriptMethod -Name Create -Value {}
+
+            Return $Obj
+        }
+
+        Context Execution {
+  
+            It 'Should Not return a DB Role Object if Passthru not selected' {
+                New-SQLDBSecurityRole -SQLServer ServerA -Database DB -Role NEWRole  | Should Not BeofType PSObject
+            }
+
+            It 'Should return a DB Role Object if Passthru selected' {
+                New-SQLDBSecurityRole -SQLServer ServerA -Database DB -Role NEWRole -Passthru | Should BeofType PSObject
+            }
+        }
+
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-SQLDBSecurityRoleSecurable" {
+        
+        # ----- Get Function Help
+        # ----- Pester to test Comment based help
+        # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+        Context "Help" {
+
+            $H = Help Get-SQLDBSecurityRoleSecurable -Full
+
+            # ----- Help Tests
+            It "has Synopsis Help Section" {
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
+            }
+
+            It "has Description Help Section" {
+                 $H.Description | Should Not BeNullorEmpty
+            }
+
+            It "has Parameters Help Section" {
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
+            }
+
+            # Examples
+            it "Example - Count should be greater than 0"{
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+            }
+            
+            # Examples - Remarks (small description that comes with the example)
+            foreach ($Example in $H.examples.example)
+            {
+                it "Example - Remarks on $($Example.Title)"{
+                     $Example.remarks  | Should not BeNullOrEmpty
+                }
+            }
+
+            It "has Notes Help Section" {
+                 $H.alertSet  | Should Not BeNullorEmpty
+            }
+        } 
+
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.Server' } -MockWith { 
+ 
+            $DatabaseObj = New-Object -TypeName PSObject
+            $DatabaseObj | Add-Member -MemberType ScriptMethod -Name Item -Value {
+                Param ($Database) 
+
+                $TypeObj = New-Object -TypeName PSObject
+                $TypeObj | Add-Member -MemberType ScriptMethod -Name EnumObjectPermissions -Value {
+                    Param ( $Role )
+                    Return (New-Object -TypeName PSObject -Property (@{
+                        Name = 'Perm info'
+                    }))
+                }
+
+                $ItemObj = New-Object -TypeName PSObject -Property @{
+                    Table = 'hello'
+                    StoredProcedures = $TypeObj
+                    ExtendedStoredProcedures = $TypeObj 
+                }
+                return $ItemObj
+            }                            
+            
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                Databases = $DatabaseObj
+            })
+ 
+            Return $Obj
+        }
+
+        Context Execution {
+            
+            It 'Should return a Permissions Info object' {
+                Get-SQLDBSecurityRoleSecurable -SQLServer ServerA -DataBase DB -Role Public | Should BeofType PSObject
+            }
+
+        }
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Grant-SQLDBSecurityRoleSecurable" {
+        
+        # ----- Get Function Help
+        # ----- Pester to test Comment based help
+        # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+        Context "Help" {
+
+            $H = Help Grant-SQLDBSecurityRoleSecurable -Full
+
+            # ----- Help Tests
+            It "has Synopsis Help Section" {
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
+            }
+
+            It "has Description Help Section" {
+                 $H.Description | Should Not BeNullorEmpty
+            }
+
+            It "has Parameters Help Section" {
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
+            }
+
+            # Examples
+            it "Example - Count should be greater than 0"{
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+            }
+            
+            # Examples - Remarks (small description that comes with the example)
+            foreach ($Example in $H.examples.example)
+            {
+                it "Example - Remarks on $($Example.Title)"{
+                     $Example.remarks  | Should not BeNullOrEmpty
+                }
+            }
+
+            It "has Notes Help Section" {
+                 $H.alertSet  | Should Not BeNullorEmpty
+            }
+        } 
+
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.ObjectPermissionSet' } -MockWith { 
+            
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                Execute = $null
+                Select = $null
+            })
+ 
+            Return $Obj
+        } -Verifiable
+
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.Server' } -MockWith { 
+ 
+            $DatabaseObj = New-Object -TypeName PSObject
+            $DatabaseObj | Add-Member -MemberType ScriptMethod -Name Item -Value {
+                Param ($Database) 
+
+                $TypeObj = New-Object -TypeName PSObject
+                $TypeObj | Add-Member -MemberType ScriptMethod -Name EnumObjectPermissions -Value {
+                    Param ( $Role )
+                    Return (New-Object -TypeName PSObject -Property (@{
+                        Name = 'Perm info'
+                    }))
+                }
+
+                $ItemObj = New-Object -TypeName PSObject -Property @{
+                    Table = 'hello'
+                    StoredProcedures = $TypeObj
+                    ExtendedStoredProcedures = $TypeObj 
+                }
+                return $ItemObj
+            }                            
+            
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                Databases = $DatabaseObj
+            })
+ 
+            Return $Obj
+        } -Verifiable
+
+        Context Execution {
+
+        }
+
+        Context Output {
+
+        }
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Revoke-SQLDBSecurityRoleSecurable" {
+        
+        # ----- Get Function Help
+        # ----- Pester to test Comment based help
+        # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+        Context "Help" {
+
+            $H = Help Revoke-SQLDBSecurityRoleSecurable -Full
+
+            # ----- Help Tests
+            It "has Synopsis Help Section" {
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
+            }
+
+            It "has Description Help Section" {
+                 $H.Description | Should Not BeNullorEmpty
+            }
+
+            It "has Parameters Help Section" {
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
+            }
+
+            # Examples
+            it "Example - Count should be greater than 0"{
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+            }
+            
+            # Examples - Remarks (small description that comes with the example)
+            foreach ($Example in $H.examples.example)
+            {
+                it "Example - Remarks on $($Example.Title)"{
+                     $Example.remarks  | Should not BeNullOrEmpty
+                }
+            }
+
+            It "has Notes Help Section" {
+                 $H.alertSet  | Should Not BeNullorEmpty
+            }
+        } 
+
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.ObjectPermissionSet' } -MockWith { 
+            
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                Execute = $null
+                Select = $null
+            })
+ 
+            Return $Obj
+        } -Verifiable
+
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'Microsoft.SqlServer.Management.Smo.Server' } -MockWith { 
+ 
+            $DatabaseObj = New-Object -TypeName PSObject
+            $DatabaseObj | Add-Member -MemberType ScriptMethod -Name Item -Value {
+                Param ($Database) 
+
+                $TypeObj = New-Object -TypeName PSObject
+                $TypeObj | Add-Member -MemberType ScriptMethod -Name EnumObjectPermissions -Value {
+                    Param ( $Role )
+                    Return (New-Object -TypeName PSObject -Property (@{
+                        Name = 'Perm info'
+                    }))
+                }
+
+                $ItemObj = New-Object -TypeName PSObject -Property @{
+                    Table = 'hello'
+                    StoredProcedures = $TypeObj
+                    ExtendedStoredProcedures = $TypeObj 
+                }
+                return $ItemObj
+            }                            
+            
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                Databases = $DatabaseObj
+            })
+ 
+            Return $Obj
+        } -Verifiable
+
+        Context Execution {
+
+        }
+
+        Context Output {
+
+        }
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
     Describe "$ModuleName : Set-SQLPermission" {
     }
 
@@ -156,32 +610,36 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                { $H.Synopsis } | Should Not BeNullorEmpty
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
             }
 
             It "has Description Help Section" {
-                { $H.Description } | Should Not BeNullorEmpty
+                 $H.Description | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                { $H.Parameters } | Should Not BeNullorEmpty
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    { $Example.remarks } | Should not BeNullOrEmpty
+                     $Example.remarks  | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                { $H.alertSet } | Should Not BeNullorEmpty
+                 $H.alertSet  | Should Not BeNullorEmpty
             }
         } 
 
@@ -241,32 +699,36 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                { $H.Synopsis } | Should Not BeNullorEmpty
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
             }
 
             It "has Description Help Section" {
-                { $H.Description } | Should Not BeNullorEmpty
+                 $H.Description | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                { $H.Parameters } | Should Not BeNullorEmpty
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    { $Example.remarks } | Should not BeNullOrEmpty
+                     $Example.remarks  | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                { $H.alertSet } | Should Not BeNullorEmpty
+                 $H.alertSet  | Should Not BeNullorEmpty
             }
         } 
 
@@ -397,32 +859,36 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                { $H.Synopsis } | Should Not BeNullorEmpty
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
             }
 
             It "has Description Help Section" {
-                { $H.Description } | Should Not BeNullorEmpty
+                 $H.Description | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                { $H.Parameters } | Should Not BeNullorEmpty
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    { $Example.remarks } | Should not BeNullOrEmpty
+                     $Example.remarks  | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                { $H.alertSet } | Should Not BeNullorEmpty
+                 $H.alertSet  | Should Not BeNullorEmpty
             }
         } 
 
@@ -480,32 +946,36 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                { $H.Synopsis } | Should Not BeNullorEmpty
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
             }
 
             It "has Description Help Section" {
-                { $H.Description } | Should Not BeNullorEmpty
+                 $H.Description | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                { $H.Parameters } | Should Not BeNullorEmpty
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    { $Example.remarks } | Should not BeNullOrEmpty
+                     $Example.remarks  | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                { $H.alertSet } | Should Not BeNullorEmpty
+                 $H.alertSet  | Should Not BeNullorEmpty
             }
         }
 
@@ -580,32 +1050,36 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                { $H.Synopsis } | Should Not BeNullorEmpty
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
             }
 
             It "has Description Help Section" {
-                { $H.Description } | Should Not BeNullorEmpty
+                 $H.Description | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                { $H.Parameters } | Should Not BeNullorEmpty
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    { $Example.remarks } | Should not BeNullOrEmpty
+                     $Example.remarks  | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                { $H.alertSet } | Should Not BeNullorEmpty
+                 $H.alertSet  | Should Not BeNullorEmpty
             }
         }
 
@@ -683,32 +1157,36 @@ InModuleScope $ModuleName {
 
             # ----- Help Tests
             It "has Synopsis Help Section" {
-                { $H.Synopsis } | Should Not BeNullorEmpty
+                 $H.Synopsis  | Should Not BeNullorEmpty
+            }
+
+            It "has Synopsis Help Section that it not start with the command name" {
+                $H.Synopsis | Should Not Match $H.Name
             }
 
             It "has Description Help Section" {
-                { $H.Description } | Should Not BeNullorEmpty
+                 $H.Description | Should Not BeNullorEmpty
             }
 
             It "has Parameters Help Section" {
-                { $H.Parameters } | Should Not BeNullorEmpty
+                 $H.Parameters.parameter.description  | Should Not BeNullorEmpty
             }
 
             # Examples
             it "Example - Count should be greater than 0"{
-                { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
+                 $H.examples.example  | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
             }
             
             # Examples - Remarks (small description that comes with the example)
             foreach ($Example in $H.examples.example)
             {
                 it "Example - Remarks on $($Example.Title)"{
-                    { $Example.remarks } | Should not BeNullOrEmpty
+                     $Example.remarks  | Should not BeNullOrEmpty
                 }
             }
 
             It "has Notes Help Section" {
-                { $H.alertSet } | Should Not BeNullorEmpty
+                 $H.alertSet  | Should Not BeNullorEmpty
             }
         }
 

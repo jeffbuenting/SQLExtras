@@ -322,7 +322,7 @@ Function Get-SQLMemberRole {
             $databases = $server.Databases[$database]
         }
 
-        write-Verbose $( $Databases | GM | Out-String)
+        #write-Verbose $( $Databases | GM | Out-String)
         
         forEach ( $DB in $databases ) {
             foreach($user in $DB.Users) {
@@ -358,103 +358,443 @@ Set-Alias -Name Get-SQLDBLoginRoles -Value Get-SQLMemberRole
 #----------------------------------------------------------------------------------
 
 # See Add-RoleMember
-#Function Set-SQLDBLoginRoles {
-#
-#<#
-#    .Description
-#        Adds SQL login to the Database security Roles.
-#
-#    .Parameter ServerInstance
-#        Name of the SQL server.  Defaults to LocalHost.
-#
-#    .Parameter DatabaseName
-#        Name of the Database to add the login permission.
-#
-#    .Parameter Login
-#        Account to add to the database.
-#
-#    .Parameter DBRole
-#        DB SQL security role to add the login to.
-#
-#    .Link
-#        https://social.technet.microsoft.com/Forums/windowsserver/en-US/185a42ba-9f49-4c55-aecb-ed6fe72c5008/new-user-with-smo?forum=winserverpowershell
-#
-#    .Example
-#        Set-SQLDBLoginRoles -ServerInstance jeffb-sql03 -databaseName test -Login Contoso\jeffbtest -DBRole db_datareader,db_datawriter
-##>
-#
-#    [CmdletBinding()]
-#    Param 
-#    (
-#        [String]$ServerInstance="localhost",
-#
-#        [Parameter(ValueFromPipeline=$true)]
-#        [String]$databaseName,
-#
-#        [String]$Login,
-#
-#        [ValidateSet('db_accessadmin','db_backupoperator','db_datareader','db_datawriter','db_ddladmin','db_denydatareader','db_denydatawriter','db_owner','db_securityadmin','RSExecRole','SQLAgentOperatorRole','SQLAgentReaderRole','SQLAgentUserRole')]
-#        [String[]]$DBRole
-#    )
-#
-#    Begin 
-#    {
-#        #   # ----- Load the SQL module if not already loaded
-#        #   if ( -Not (Get-module -Name SQLPS) ) {
-#        #       Write-Verbose 'Importing SQL Module as it is not already installed'
-#        #       $SQLModuleInstalled = $False
-#        #       $Location = $PWD
-#        #       import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
-#        #   }
-#
-#        # ----- Establish Connection to SQL Server
-#        $serverConnection = new-object Microsoft.SqlServer.Management.Common.ServerConnection
-#        $serverConnection.ServerInstance=$serverInstance
-#        $server = new-object Microsoft.SqlServer.Management.SMO.Server($serverConnection)
-#
-#    }
-#
-#    Process 
-#    {
-#        # ----- Check if Role already set.  
-#        $ExistingLogins = Get-SQLDBLoginRoles -ServerInstance $ServerInstance -databaseName $databaseName -Login $Login
-#        
-#        $DB = $Server.Databases[$DataBaseName]
-#
-#        Write-Verbose "Assigning roles to login"
-#        if ( $ExistingLogins.Login -ne $Login ) {
-#                Write-Verbose "Creating DB Login: $DB  $Login"
-#                
-#                
-#                $user = new-object ('Microsoft.SqlServer.Management.Smo.User') $DB, $Login
-#                $user.Login = $Login
-#                if ($server.Information.Version.Major -ne '8') { $user.DefaultSchema = 'dbo' }
-#                $user.Create()
-#            }
-#            else {
-#                Write-Verbose "Already exists.  Retrieving login"
-#                $user = $DB.users | where Login -eq $Login
-#        }
-#        Write-Verbose "Assigning DB roles"
-#        Foreach ( $Role in $DBRole ) {
-#            $User.AddtoRole($Role)
-#        }
-#        
-#    }
-#
-#    End 
-#    {
-#      #     # $server.ConnectionContext.Disconnect()
-#      #      if ( $SQLModuleInstalled ) {
-#      #          # ----- Cleanup
-#      #          Write-Verbose 'Removing SQL Module'
-#      #          Set-Location -Path $Location
-#      #          Remove-Module SQLPS
-#      #      }
-#    }
-#}
-#
+Function Set-SQLDBLoginRoles {
 
+<#
+    .Description
+        Adds SQL login to the Database security Roles.
+
+    .Parameter ServerInstance
+        Name of the SQL server.  Defaults to LocalHost.
+
+    .Parameter DatabaseName
+        Name of the Database to add the login permission.
+
+    .Parameter Login
+        Account to add to the database.
+
+    .Parameter DBRole
+        DB SQL security role to add the login to.
+
+    .Link
+        https://social.technet.microsoft.com/Forums/windowsserver/en-US/185a42ba-9f49-4c55-aecb-ed6fe72c5008/new-user-with-smo?forum=winserverpowershell
+
+    .Example
+        Set-SQLDBLoginRoles -ServerInstance jeffb-sql03 -databaseName test -Login Contoso\jeffbtest -DBRole db_datareader,db_datawriter
+#>
+
+    [CmdletBinding()]
+    Param 
+    (
+        [String]$ServerInstance="localhost",
+
+        [Parameter(ValueFromPipeline=$true)]
+        [String]$databaseName,
+
+        [String]$Login,
+
+        [ValidateSet('db_accessadmin','db_backupoperator','db_datareader','db_datawriter','db_ddladmin','db_denydatareader','db_denydatawriter','db_owner','db_securityadmin','RSExecRole','SQLAgentOperatorRole','SQLAgentReaderRole','SQLAgentUserRole')]
+        [String[]]$DBRole
+    )
+
+    Begin 
+    {
+        #   # ----- Load the SQL module if not already loaded
+        #   if ( -Not (Get-module -Name SQLPS) ) {
+        #       Write-Verbose 'Importing SQL Module as it is not already installed'
+        #       $SQLModuleInstalled = $False
+        #       $Location = $PWD
+        #       import-module '\\sl-jeffb\f$\Sources\Powershell Modules\SQLPS\sqlps' -disablenamechecking
+        #   }
+
+        # ----- Establish Connection to SQL Server
+        $serverConnection = new-object Microsoft.SqlServer.Management.Common.ServerConnection
+        $serverConnection.ServerInstance=$serverInstance
+        $server = new-object Microsoft.SqlServer.Management.SMO.Server($serverConnection)
+
+    }
+
+    Process 
+    {
+        # ----- Check if Role already set.  
+        $ExistingLogins = Get-SQLDBLoginRoles -ServerInstance $ServerInstance -databaseName $databaseName -Login $Login
+        
+        $DB = $Server.Databases[$DataBaseName]
+
+        Write-Verbose "Assigning roles to login"
+        if ( $ExistingLogins.Login -ne $Login ) {
+                Write-Verbose "Creating DB Login: $DB  $Login"
+                
+                
+                $user = new-object ('Microsoft.SqlServer.Management.Smo.User') $DB, $Login
+                $user.Login = $Login
+                if ($server.Information.Version.Major -ne '8') { $user.DefaultSchema = 'dbo' }
+                $user.Create()
+            }
+            else {
+                Write-Verbose "Already exists.  Retrieving login"
+                $user = $DB.users | where Login -eq $Login
+        }
+        Write-Verbose "Assigning DB roles"
+        Foreach ( $Role in $DBRole ) {
+            $User.AddtoRole($Role)
+        }
+        
+    }
+
+    End 
+    {
+      #     # $server.ConnectionContext.Disconnect()
+      #      if ( $SQLModuleInstalled ) {
+      #          # ----- Cleanup
+      #          Write-Verbose 'Removing SQL Module'
+      #          Set-Location -Path $Location
+      #          Remove-Module SQLPS
+      #      }
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Get-SQLDBSecurityRole {
+
+<#
+    .Synopsis
+        Retrieves a list of SQL Database Security Roles
+
+    .Description
+        Gets a list of SQL Database Security Roles.
+
+    .Parameter SQLServer
+        Name of the SQL server
+
+    .Parameter DataBase
+        Database name.
+
+    .Example
+        Return the security roles for the database master on server servera
+
+        Get-SQLSecurityRole -SQLServer ServerA -Database master
+
+    .Link
+        https://docs.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.management.smo.database.roles?redirectedfrom=MSDN&view=sqlserver-2016#Microsoft_SqlServer_Management_Smo_Database_Roles
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2018 JUL 12
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$SQLServer = $env:COMPUTERNAME,
+
+        [Parameter (Mandatory = $True )]
+        [String]$DataBase
+    )
+
+    $srv = new-Object Microsoft.SqlServer.Management.Smo.Server($SQLServer)  
+
+    $db = $srv.Databases.Item($DataBase) 
+
+    Write-Verbose "$($DB | gm | out-string )"
+
+    Write-Output $DB.Roles   
+
+}
+
+#----------------------------------------------------------------------------------
+
+Function New-SQLDBSecurityRole {
+
+<#
+    .Synopsis
+        Creates a new Security Role on a DB
+
+    .Description
+        Creates a Security Role on a DB.
+
+    .Parameter SQLServer
+        Name of the Sqlserver
+
+    .Parameter Database
+        Name of the database
+
+    .Parameter Role
+        Name of the Role to create
+
+    .Parameter Passthru
+        If included, the new Role object will be passed to the pipeline.
+
+    .Example
+        Create the RSExecRole on the SQLServer
+
+        New-SQLDBSecurityRole -SQLServer ServerA -Database master -Role RSExecRole
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2018 JUL 12
+
+
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$SQLServer = $env:COMPUTERNAME,
+
+        [Parameter (Mandatory = $True )]
+        [String]$DataBase,
+
+        [Parameter (Mandatory = $True )]
+        [String]$Role,
+
+        [Switch]$Passthru
+    )
+
+    $srv = new-Object Microsoft.SqlServer.Management.Smo.Server($SQLServer)  
+
+    $DB = $srv.Databases.Item($DataBase)
+    
+    $NewRole = New-Object -TypeName Microsoft.SqlServer.Management.Smo.DatabaseRole( $DB,$Role )
+    $NewRole.Create()
+
+    if ( $Passthru ) { Write-Output $NewRole }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Get-SQLDBSecurityRoleSecurable {
+
+<#
+    .Synopsis
+        Retrieves Securables and their permissions
+
+    .Description
+        Retrieves a list of securable permissions for a specific role.  Whether the securable is a table, storedprocedure or extended stored procedure.
+
+    .Parameter SQLServer
+        Name of the Sqlserver
+
+    .Parameter Database
+        Name of the database
+
+    .Parameter Role
+        Name of the Role to create
+
+    .Example
+        return list of securables for the RSExecRole
+
+        Get-SQLDBSecurityRoleSecurable -SQLServer ServerA -Database master -Role RSExecRole
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2018 JUL 12
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$SQLServer = $env:COMPUTERNAME,
+
+        [Parameter (Mandatory = $True )]
+        [String]$DataBase,
+
+        [Parameter (Mandatory = $True )]
+        [String]$Role
+    )
+
+    $srv = new-Object Microsoft.SqlServer.Management.Smo.Server($SQLServer)  
+
+    $DB = $srv.Databases.Item($DataBase)
+    
+    Write-Verbose "$($DB | GM | Out-string)"
+
+    Write-verbose "Retrieving Tables"
+    Foreach ( $S in $DB.Tables ) {
+        Write-output $S.EnumObjectPermissions($Role)
+    }
+
+    Write-verbose "Retrieving Stored Procedures"
+    Foreach ( $S in $DB.StoredProcedures ) {
+        Write-output $S.EnumObjectPermissions($Role)
+    } 
+    
+    Write-verbose "Retrieving Extended Stored Procedures"
+    Foreach ( $S in $DB.ExtendedStoredProcedures ) {
+        Write-output $S.EnumObjectPermissions($Role)
+    }    
+}
+
+#----------------------------------------------------------------------------------
+
+Function Grant-SQLDBSecurityRoleSecurable {
+
+<#
+    .Synopsis
+        Grants permissions to a securible
+
+    .Description
+        Grants permissions to a securible.  Whether the securable is a table, storedprocedure or extended stored procedure.
+
+    .Parameter SQLServer
+        Name of the Sqlserver
+
+    .Parameter Database
+        Name of the database
+
+    .Parameter Role
+        Name of the Role to create
+
+    .parameter Securable
+        Name of the Securable to set the permission on.
+
+    .Parameter Execute
+        Sets the Execute permission
+
+    .Parameter Select
+        Sets the Select Permission
+
+    .Example
+        grant permissions for the RSExecRole 
+
+        grant-sqldbsecurityrolesecurable -sqlserver sl-jb04sql -database master -role RSExecRole -Execute -securable xp_sqlagent_enum_jobs,xp_sqlagent_is_starting,xp_sqlagent_notify
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2018 JUL 12
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$SQLServer = $env:COMPUTERNAME,
+
+        [Parameter (Mandatory = $True )]
+        [String]$DataBase,
+
+        [Parameter (Mandatory = $True )]
+        [String]$Role,
+
+        [Parameter (Mandatory = $True )]
+        [String[]]$Securable,
+
+        [Switch]$Execute,
+
+        [Switch]$Select
+    )
+
+    $srv = new-Object Microsoft.SqlServer.Management.Smo.Server($SQLServer)  
+
+    # ----- configure permissions
+    $Permission = New-Object Microsoft.SqlServer.Management.Smo.ObjectPermissionSet 
+
+    # ----- Assign Permissions
+    If ( $Execute ) { 
+        Write-Verbose "Granting Execute"
+        $Permission.Execute = $True 
+    }
+
+    If ( $Select ) { 
+        Write-Verbose "Granting Execute"
+        $Permission.Select = $True 
+    }
+
+    $DB = $srv.Databases.Item($DataBase)
+    
+    # ----- Grant for each Securable
+    Foreach ($S in $Securable ) {
+        Write-Verbose "    For $S"
+
+        # ----- Find the securable amongst the tables, stored proceedures or Extended Stored proceedures
+        if ( $Sec = $DB.Tables | where Name -eq $S ) { $Sec.Grant( $Permission, $Role ) }
+        if ( $Sec = $DB.StoredProcedures | where Name -eq $S ) { $Sec.Grant( $Permission, $Role ) }
+        if ( $Sec = $DB.ExtendedStoredProcedures | where Name -eq $S ) { $Sec.Grant( $Permission, $Role ) }
+
+    }
+}
+
+#----------------------------------------------------------------------------------
+
+Function Revoke-SQLDBSecurityRoleSecurable {
+
+<#
+    .Synopsis
+        Revokes permissions to a securible
+
+    .Description
+        Revokes permissions to a securible.  Whether the securable is a table, storedprocedure or extended stored procedure.
+
+    .Parameter SQLServer
+        Name of the Sqlserver
+
+    .Parameter Database
+        Name of the database
+
+    .Parameter Role
+        Name of the Role to create
+
+    .parameter Securable
+        Name of the Securable to set the permission on.
+
+    .Parameter Execute
+        Sets the Execute permission
+
+    .Parameter Select
+        Sets the Select Permission
+
+    .Example
+        Revoke permissions for the RSExecRole 
+
+        Revoke-sqldbsecurityrolesecurable -sqlserver sl-jb04sql -database master -role RSExecRole -Execute -securable xp_sqlagent_enum_jobs,xp_sqlagent_is_starting,xp_sqlagent_notify
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2018 JUL 12s
+#>
+
+    [CmdletBinding()]
+    Param (
+        [String]$SQLServer = $env:COMPUTERNAME,
+
+        [Parameter (Mandatory = $True )]
+        [String]$DataBase,
+
+        [Parameter (Mandatory = $True )]
+        [String]$Role,
+
+        [Parameter (Mandatory = $True )]
+        [String]$Securable,
+
+        [Switch]$Execute,
+
+        [Switch]$Select
+    )
+
+    $srv = new-Object Microsoft.SqlServer.Management.Smo.Server($SQLServer)  
+
+    # ----- Assign Permissions
+    $Permission = New-Object Microsoft.SqlServer.Management.Smo.ObjectPermissionSet 
+
+    If ( $Execute ) { 
+        Write-Verbose "Revoking Execute"
+        $Permission.Execute = $False 
+    }
+
+    If ( $Select ) { 
+        Write-Verbose "Granting Execute"
+        $Permission.Select = $False 
+    }
+
+    $DB = $srv.Databases.Item($DataBase)
+
+    # ----- Grant for each Securable
+    Foreach ($S in $Securable ) {
+        Write-Verbose "    For $S"
+
+        # ----- Find the securable amongst the tables, stored proceedures or Extended Stored proceedures
+        if ( $Sec = $DB.Tables | where Name -eq $S ) { $Sec.Revoke( $Permission, $Role ) }
+        if ( $Sec = $DB.StoredProcedures | where Name -eq $S ) { $Sec.Revoke( $Permission, $Role ) }
+        if ( $Sec = $DB.ExtendedStoredProcedures | where Name -eq $S ) { $Sec.Revoke( $Permission, $Role ) }
+
+    }
+}
 
 #----------------------------------------------------------------------------------
 

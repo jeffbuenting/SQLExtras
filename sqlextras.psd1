@@ -78,7 +78,8 @@ FunctionsToExport = 'install-SQLServer', 'Get-SQLMemberRole', 'Set-SQLPermission
                'Add-SSRSSitePermissions', 'Get-SSRSReportDataSource', 
                'Set-SSRSReportDataSource', 'Get-SQLclientProtocol', 
                'Get-SQLNetworkProtocol', 'Set-SQLNetworkProtocol', 'Get-SQLDBMail', 
-               'Get-SQLDBMailAccount'
+               'Get-SQLDBMailAccount','Set-SQLDBLoginRoles','Get-SQLDBSecurityRole','New-SQLDBSecurityRole',
+               'Get-SQLDBSecurityRoleSecurable','Grant-SQLDBSecurityRoleSecurable','Revoke-SQLDBSecurityRoleSecurable'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
