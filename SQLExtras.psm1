@@ -247,6 +247,73 @@ Function install-SQLServer {
 # SQL Security Cmdlets
 #----------------------------------------------------------------------------------
 
+Function Get-SQLLoginRole {
+
+<#
+    .Synopsis
+        Retrieves a list of Server Roles that the SQL Login is a member.
+    
+    .Description
+        Returns all server roles to which a SQL Login account is a member.
+
+
+    .Parameter ServerInstance
+        Name of the SQL server you want login information about.
+
+        Defaults to LocalHost.
+
+    .Parameter MemberName
+        Filters the returned info on a particular Login.  Either a user or group
+
+    .Example
+        Return all server roles SQLUser is a member of.
+
+        Get-SQLLoginRole -ServerInstance Server -Login SQLUser
+
+    .Notes
+        Author : Jeff Buenting
+        Date : 2018 AUG 14
+
+#>
+
+    [CmdletBinding()]
+    Param 
+    (
+        [String]$ServerInstance="localhost",
+        
+        [Parameter ( Mandatory = $True, ValueFromPipeline = $True )]
+        [Alias ( "Login" )]
+        [String[]]$MemberName
+    )
+
+    Begin {
+        Write-Verbose "Connecting to SQL Server $ServerInstance"
+        $svr = New-Object ('Microsoft.SqlServer.Management.Smo.Server') $ServerInstance
+    }
+
+    Process {
+        Foreach ( $M in $MemberName ) {
+            Write-Verbose "Retrieving Server Roles for $M"
+
+            $User = $Svr.Logins | where Name -eq $M
+
+            Write-verbose "$($User | out-string)"
+            
+            Foreach ( $Role in $Svr.Roles ) {
+                Write-Verbose "Is a member of $($Role.Name)"
+                if ( $User.IsMember( $Role.Name ) ) {
+                    
+                    Write-Output $Role
+                }    
+            }
+        }
+    }
+
+
+}
+
+#----------------------------------------------------------------------------------
+
 Function Get-SQLMemberRole {
 
 <#
@@ -423,7 +490,7 @@ Function Set-SQLDBLoginRoles {
 
         Write-Verbose "Assigning roles to login"
         if ( $ExistingLogins.Login -ne $Login ) {
-                Write-Verbose "Creating DB Login: $DB  $Login"
+                Write-Verbose "Creating DB Login: $Login on DB = $DB"
                 
                 
                 $user = new-object ('Microsoft.SqlServer.Management.Smo.User') $DB, $Login
@@ -621,6 +688,11 @@ Function Get-SQLDBSecurityRoleSecurable {
     Foreach ( $S in $DB.ExtendedStoredProcedures ) {
         Write-output $S.EnumObjectPermissions($Role)
     }    
+
+    Write-verbose "Retrieving Views"
+    Foreach ( $S in $DB.Views ) {
+        Write-output $S.EnumObjectPermissions($Role)
+    }
 }
 
 #----------------------------------------------------------------------------------
@@ -675,26 +747,103 @@ Function Grant-SQLDBSecurityRoleSecurable {
         [Parameter (Mandatory = $True )]
         [String[]]$Securable,
 
-        [Switch]$Execute,
+        [validateSet ( 'Alter','Connect','Control','CreateSequence','Delete','Execute','Impersonate','Insert','Recieve','References','Select','Send','TakeOwnership','Update','ViewChangeTracking','ViewDefinition')]
+        [String[]]$Permission
 
-        [Switch]$Select
+
     )
 
     $srv = new-Object Microsoft.SqlServer.Management.Smo.Server($SQLServer)  
 
     # ----- configure permissions
-    $Permission = New-Object Microsoft.SqlServer.Management.Smo.ObjectPermissionSet 
+    $SecPermission = New-Object Microsoft.SqlServer.Management.Smo.ObjectPermissionSet 
 
     # ----- Assign Permissions
-    If ( $Execute ) { 
-        Write-Verbose "Granting Execute"
-        $Permission.Execute = $True 
+    Foreach ( $P in $Permission ) {
+        $SecPermission."$P" = $True
     }
 
-    If ( $Select ) { 
-        Write-Verbose "Granting Execute"
-        $Permission.Select = $True 
-    }
+    Write-Verbose "Permission = $($SecPermission | out-string )"
+
+ #   If ( $Alter ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Alter = $True 
+ #   }
+ #
+ #   If ( $Connect ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Connect = $True 
+ #   }
+ #
+ #   If ( $Control ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Control = $True 
+ #   }
+ #
+ #   If ( $CreateSequence) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.CreateSequence = $True 
+ #   }
+ #
+ #   If ( $Delete ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Delete = $True 
+ #   }
+ #
+ #   If ( $Execute ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Execute = $True 
+ #   }
+ #
+ #   If ( $Impersonate ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Impersonate = $True 
+ #   }
+ #
+ #   If ( $Insert ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Insert = $True 
+ #   }
+ #
+ #   If ( $Receive ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Receive = $True 
+ #   }
+ #
+ #   If ( $References ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.References = $True 
+ #   }
+ #
+ #   If ( $Select ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Select = $True 
+ #   }
+ #
+ #   If ( $Send ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Send = $True 
+ #   }
+ #
+ #   If ( $TakeOwnership ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.TakeOwnership = $True 
+ #   }
+ #
+ #   If ( $Update ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.Update = $True 
+ #   }
+ #
+ #   If ( $ViewChangeTracking ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.ViewChangeTracking = $True 
+ #   }
+ #
+ #   If ( $ViewDefinition ) { 
+ #       Write-Verbose "Granting Execute"
+ #       $Permission.ViewDefinition = $True 
+ #   }
 
     $DB = $srv.Databases.Item($DataBase)
     
@@ -703,9 +852,10 @@ Function Grant-SQLDBSecurityRoleSecurable {
         Write-Verbose "    For $S"
 
         # ----- Find the securable amongst the tables, stored proceedures or Extended Stored proceedures
-        if ( $Sec = $DB.Tables | where Name -eq $S ) { $Sec.Grant( $Permission, $Role ) }
-        if ( $Sec = $DB.StoredProcedures | where Name -eq $S ) { $Sec.Grant( $Permission, $Role ) }
-        if ( $Sec = $DB.ExtendedStoredProcedures | where Name -eq $S ) { $Sec.Grant( $Permission, $Role ) }
+        if ( $Sec = $DB.Tables | where Name -eq $S ) { $Sec.Grant( $SecPermission, $Role ) }
+        if ( $Sec = $DB.StoredProcedures | where Name -eq $S ) { $Sec.Grant( $SecPermission, $Role ) }
+        if ( $Sec = $DB.ExtendedStoredProcedures | where Name -eq $S ) { $Sec.Grant( $SecPermission, $Role ) }
+        if ( $Sec = $DB.Views | where Name -eq $S ) { $Sec.Grant( $SecPermission, $Role ) }
 
     }
 }
@@ -1015,18 +1165,6 @@ Function Remove-SQLDatabase {
             invoke-sqlcmd -ServerInstance $ServerInstance -Query "Drop database $DB;"
         }
     }
-
-    End {
-        Remove-Variable -Name $SMOServer
-
- #       if ( $SQLModuleInstalled ) {
- #           # ----- Cleanup
- #           Write-Verbose 'Removing SQL Module'
- #           Set-Location -Path $Location
- #           Remove-Module SQLPS
- #       }
-    }
-
 }
 
 #----------------------------------------------------------------------------------
@@ -2224,7 +2362,7 @@ Function New-SSRSFolderSettings {
             $ErrorMessage = $_.Exception.message
             $ExceptionType = $_.Exception.GetType().FullName
                  
-            Throw "Get-SSRSRoleMembership : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
+            Throw "New-SSRSFolderSettings : Error Connecting to SSRS $SSRSServer`n`n     $ErrorMessage`n`n     $ExceptionType"
         }   
         
         $InheritParent = $true        

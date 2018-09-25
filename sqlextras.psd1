@@ -69,7 +69,7 @@ RequiredModules = @('SQLServer')
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'install-SQLServer', 'Get-SQLMemberRole', 'Set-SQLPermission', 
+FunctionsToExport = 'install-SQLServer', 'Get-SQLLoginRole', 'Get-SQLMemberRole', 'Set-SQLPermission', 
                'Get-SQLPermission', 'Get-SQLDatabase', 'Remove-SQLDatabase', 
                'Repair-SQLDatabase', 'Get-SQLJob', 'Set-SQLJob', 'New-SQLSchedule', 
                'Get-SQLSchedule', 'Import-SSRSReport', 'Backup-SSRSReport', 
